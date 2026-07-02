@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { checkRateLimit } from "../../lib/rate-limit";
 
 export async function POST(request: Request) {
+  // One single try block to rule them all
   try {
+    // 1. SECURITY LAYER: Get the user's IP address
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0] : "unknown-ip";
+
+    // 2. ENFORCE LIMIT: Allow 3 requests per 1 minute
+    const rateLimit = checkRateLimit(ip, 3, 60000);
+
+    if (!rateLimit.success) {
+      console.warn(`Blocked spammer from IP: ${ip}`);
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a minute and try again." },
+        { status: 429 }
+      );
+    }
+
+    // 3. EXTRACT CLIENT PAYLOAD
     const body = await request.json();
     const { idea, format } = body;
 
@@ -10,6 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing idea" }, { status: 400 });
     }
 
+    // 4. API CREDENTIAL CHECK
     const apiKey = process.env.GEMINI_API_KEY || process.env.GEMENI_API_KEY;
 
     if (!apiKey) {
@@ -19,6 +38,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 5. GENERATE CONTENT VIA GEMINI
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const systemPrompt = `You are an expert AI video scriptwriter and director. 
@@ -35,19 +55,16 @@ Output the response in this exact format, using clear Markdown:
 ### 3. Optimized AI Video Generation Prompt
 [A dense, highly descriptive paragraph designed for AI video tools]`;
 
-    // Combine the instructions and user input so Gemini knows exactly what to do
     const finalPrompt = `${systemPrompt}\n\nUser Core Idea: ${idea}\nVideo Format: ${format}`;
 
-    // Call the free Gemini 1.5 Flash model
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(finalPrompt);
-    
-    // Extract the text from the response
     const generatedText = result.response.text();
 
     return NextResponse.json({ result: generatedText });
     
   } catch (error) {
+    // Any error inside the block drops straight down here
     console.error("API Error:", error);
     return NextResponse.json({ error: "Failed to generate prompt" }, { status: 500 });
   }
