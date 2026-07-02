@@ -1,22 +1,45 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { checkRateLimit } from "../../lib/rate-limit";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
-  // One single try block to rule them all
   try {
-    // 1. SECURITY LAYER: Get the user's IP address
+    // 1. SECURITY LAYER: Rate Limiter
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor ? forwardedFor.split(",")[0] : "unknown-ip";
-
-    // 2. ENFORCE LIMIT: Allow 3 requests per 1 minute
     const rateLimit = checkRateLimit(ip, 3, 60000);
 
     if (!rateLimit.success) {
-      console.warn(`Blocked spammer from IP: ${ip}`);
       return NextResponse.json(
-        { error: "Too many requests. Please wait a minute and try again." },
+        { error: "Too many requests. Please wait a minute." },
         { status: 429 }
+      );
+    }
+
+    // 2. AUTHENTICATION: Check who is making the request
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // Verify the user's secure token
+    const { data, error: authError } = await supabase.auth.getUser();
+    const user = data?.user;
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized. You must be logged in to generate prompts." },
+        { status: 401 }
       );
     }
 
@@ -28,19 +51,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing idea" }, { status: 400 });
     }
 
-    // 4. API CREDENTIAL CHECK
+    // 4. GENERATE CONTENT VIA GEMINI
     const apiKey = process.env.GEMINI_API_KEY || process.env.GEMENI_API_KEY;
-
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "Missing Gemini API key. Add GEMINI_API_KEY to your .env.local file." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Missing Gemini API key." }, { status: 500 });
     }
 
-    // 5. GENERATE CONTENT VIA GEMINI
     const genAI = new GoogleGenerativeAI(apiKey);
-
     const systemPrompt = `You are an expert AI video scriptwriter and director. 
 Take the user's core idea and format, and generate a structured production prompt.
 
@@ -56,15 +73,29 @@ Output the response in this exact format, using clear Markdown:
 [A dense, highly descriptive paragraph designed for AI video tools]`;
 
     const finalPrompt = `${systemPrompt}\n\nUser Core Idea: ${idea}\nVideo Format: ${format}`;
-
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(finalPrompt);
     const generatedText = result.response.text();
 
+    // 5. DATABASE SAVE: Store the memory in Supabase
+    const { error: dbError } = await supabase
+      .from("prompts")
+      .insert({
+        user_id: user.id, // This links the prompt to the specific logged-in user
+        core_idea: idea,
+        format: format,
+        generated_result: generatedText
+      });
+
+    if (dbError) {
+      console.error("Database save failed:", dbError);
+      // We log it, but we still return the prompt to the user so their UI doesn't break
+    }
+
+    // 6. RETURN SUCCESS
     return NextResponse.json({ result: generatedText });
     
   } catch (error) {
-    // Any error inside the block drops straight down here
     console.error("API Error:", error);
     return NextResponse.json({ error: "Failed to generate prompt" }, { status: 500 });
   }
