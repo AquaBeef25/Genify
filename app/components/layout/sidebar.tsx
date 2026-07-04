@@ -1,14 +1,37 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Sparkles, Settings, LogOut, CreditCard, LayoutDashboard } from 'lucide-react';
+import {
+  Sparkles,
+  Settings,
+  LogOut,
+  CreditCard,
+  LayoutDashboard,
+  LayoutGrid,
+  Upload,
+  ShieldCheck,
+} from 'lucide-react';
 import { createClient } from '../../lib/supabase';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Show the Moderation link only to the admin. This is cosmetic — the /admin
+  // page and the RLS UPDATE policy are the real guards.
+  useEffect(() => {
+    const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
+    if (!adminId) return;
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.id === adminId) setIsAdmin(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -18,6 +41,11 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Discover', href: '/', icon: LayoutDashboard },
     { name: 'My Prompts', href: '/history', icon: Sparkles },
+    { name: 'Community Gallery', href: '/gallery', icon: LayoutGrid },
+    { name: 'Share Result', href: '/submit', icon: Upload },
+    ...(isAdmin
+      ? [{ name: 'Moderation', href: '/admin', icon: ShieldCheck }]
+      : []),
     { name: 'Billing', href: '/billing', icon: CreditCard },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
@@ -39,8 +67,8 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                isActive 
-                  ? 'bg-zinc-800 text-white shadow-sm' 
+                isActive
+                  ? 'bg-zinc-800 text-white shadow-sm'
                   : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
               }`}
             >

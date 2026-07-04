@@ -78,14 +78,16 @@ Output the response in this exact format, using clear Markdown:
     const generatedText = result.response.text();
 
     // 5. DATABASE SAVE: Store the memory in Supabase
-    const { error: dbError } = await supabase
+    const { data: savedPrompt, error: dbError } = await supabase
       .from("prompts")
       .insert({
         user_id: user.id, // This links the prompt to the specific logged-in user
         core_idea: idea,
         format: format,
         generated_result: generatedText
-      });
+      })
+      .select("id")
+      .single();
 
     if (dbError) {
       console.error("Database save failed:", dbError);
@@ -93,7 +95,9 @@ Output the response in this exact format, using clear Markdown:
     }
 
     // 6. RETURN SUCCESS
-    return NextResponse.json({ result: generatedText });
+    // `id` lets the client deep-link the "Share this result" CTA to the submit
+    // form (/submit?promptId=...). It may be null if the DB save failed above.
+    return NextResponse.json({ result: generatedText, id: savedPrompt?.id ?? null });
     
   } catch (error) {
     console.error("API Error:", error);
