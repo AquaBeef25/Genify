@@ -23,14 +23,30 @@ export default function PublicLayout({
     <div className="min-h-screen bg-black text-white">
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8">
-          <Link href="/gallery" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">
-              Genify <span className="text-zinc-500">Gallery</span>
-            </span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/gallery" className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <span className="text-lg font-bold tracking-tight">
+                Genify <span className="text-zinc-500">Gallery</span>
+              </span>
+            </Link>
+            <nav className="hidden items-center gap-4 text-sm sm:flex">
+              <Link
+                href="/gallery"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Gallery
+              </Link>
+              <Link
+                href="/prompt"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Prompt Library
+              </Link>
+            </nav>
+          </div>
 
           <div className="flex items-center gap-2">
             {signedIn ? (
