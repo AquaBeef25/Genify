@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 // Shared markdown styling so both the default blueprint and the storyboard
@@ -34,6 +36,8 @@ export default function DashboardPage() {
   const [storyboard, setStoryboard] = useState(false);
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
+  // Id of the most recent saved prompt row, used to deep-link the "Share it" CTA.
+  const [lastPromptId, setLastPromptId] = useState<string | null>(null);
 
   // Refine state — used once an initial result exists.
   const [refineInput, setRefineInput] = useState("");
@@ -61,6 +65,7 @@ export default function DashboardPage() {
 
       if (data.result) {
         setOutput(data.result);
+        setLastPromptId(data.id ?? null);
         return true;
       } else {
         setOutput("Error: " + data.error);
@@ -181,6 +186,18 @@ export default function DashboardPage() {
                 {output}
               </ReactMarkdown>
             </div>
+
+            {/* Share-to-gallery CTA — appears once a result exists. */}
+            <Link
+              href={lastPromptId ? `/submit?promptId=${lastPromptId}` : "/submit"}
+              className="flex items-center justify-between gap-3 rounded-lg border border-blue-900/50 bg-blue-950/20 px-4 py-3 transition-colors hover:border-blue-800 hover:bg-blue-950/40"
+            >
+              <span className="flex items-center gap-2 text-sm text-blue-200">
+                <Share2 className="h-4 w-4" />
+                Got a result from this prompt? Share it in the gallery
+              </span>
+              <span className="text-sm font-semibold text-blue-300">→</span>
+            </Link>
 
             {/* Refine / follow-up */}
             <div className="border-t border-zinc-800 pt-4">

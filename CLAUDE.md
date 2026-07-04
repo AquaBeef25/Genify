@@ -188,6 +188,26 @@ inferred from usage:
 | `generated_result` | The Gemini-generated Markdown |
 | `created_at` | Timestamp (used for ordering history) |
 
+### Community gallery tables
+
+The full DDL lives in **`supabase/schema.sql`** (run it manually in the
+Supabase SQL editor; replace the `ADMIN_USER_ID_PLACEHOLDER` with your auth
+user UUID first). It creates:
+
+- **`submissions`** — user-shared external video links (YouTube/Vimeo only) of
+  results made with a Genify prompt: `user_id`, optional `prompt_id`,
+  `prompt_text`, `platform` (Veo/Sora/Kling/Runway/Google AI Studio),
+  `model_version`, `video_url`, `thumbnail_url`, `submitter_name`/`submitter_url`
+  (credit), `status` (`pending`/`approved`/`rejected`), `likes_count`,
+  `submitted_at`.
+- **`submission_likes`** — many-to-many likes with composite PK
+  `(submission_id, user_id)`; a `security definer` trigger keeps
+  `submissions.likes_count` in sync.
+
+**RLS:** anyone reads `approved` rows; users read their own + insert their own
+`pending` rows; only the admin (`ADMIN_USER_ID`) reads all / updates status;
+users manage only their own likes.
+
 ---
 
 ## Environment Variables
@@ -197,6 +217,7 @@ inferred from usage:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (client & server) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key |
 | `GEMINI_API_KEY` | Google Gemini API key (server-side) |
+| `NEXT_PUBLIC_ADMIN_USER_ID` | Supabase auth UUID of the admin — gates the `/admin` moderation view; must match the `ADMIN_USER_ID` in `supabase/schema.sql` |
 
 > A fallback env var `GEMENI_API_KEY` (note the typo) is also read in
 > `route.ts`. Prefer setting `GEMINI_API_KEY`.
@@ -222,4 +243,12 @@ inferred from usage:
 - **DB save failures are non-fatal** — the user still receives their generated
   prompt even if persistence fails.
 - **Route groups** keep auth and dashboard concerns separated without changing
-  URLs.
+  URLs. The public gallery lives in its own `(public)` group (`/gallery`) with a
+  minimal shell — no dashboard sidebar — so logged-out visitors can browse.
+- **Gallery moderation is RLS-enforced.** `/admin` is only cosmetically gated by
+  `NEXT_PUBLIC_ADMIN_USER_ID`; the real guard is the admin-only UPDATE policy on
+  `submissions`. New submissions are always inserted as `pending`.
+- **Submission URLs are validated twice** — client-side in `app/(dashboard)/submit`
+  for UX and server-side in `app/api/submissions/route.ts` via
+  `app/lib/embed.ts` (`parseVideoUrl`), which is the single source of truth for
+  allowed hosts (YouTube/Vimeo).

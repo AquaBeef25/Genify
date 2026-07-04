@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Trash2 } from "lucide-react";
+import { Trash2, Share2 } from "lucide-react";
 
 export type Prompt = {
   id: string;
@@ -44,6 +45,14 @@ export default function PromptCard({
           <span className="text-xs text-zinc-500">
             {new Date(prompt.created_at).toLocaleDateString()}
           </span>
+          <Link
+            href={`/submit?promptId=${prompt.id}`}
+            aria-label="Share a result from this prompt"
+            title="Share a result"
+            className="text-zinc-500 hover:text-blue-400 transition-colors"
+          >
+            <Share2 className="h-4 w-4" />
+          </Link>
           <button
             onClick={handleDelete}
             disabled={deleting}
