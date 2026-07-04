@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { createClient } from "../lib/supabase";
+import SignupWall from "../components/shared/SignupWall";
+
+// Mirror of the server's HttpOnly guest cookie, for instant UX (the cookie
+// stays authoritative server-side).
+const GUEST_USED_KEY = "guest_gen_used";
 
 // Shared markdown styling so both the default blueprint and the storyboard
 // (which uses h2 headings and horizontal rules between scenes) render cleanly.
@@ -43,6 +49,22 @@ export default function DashboardPage() {
   const [refineInput, setRefineInput] = useState("");
   const [refining, setRefining] = useState(false);
 
+  // Guest state — drives the signup wall for logged-out visitors.
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestUsed, setGuestUsed] = useState(false);
+  const [showWall, setShowWall] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const guest = !data?.user;
+      setIsGuest(guest);
+      if (guest && localStorage.getItem(GUEST_USED_KEY)) {
+        setGuestUsed(true);
+      }
+    });
+  }, []);
+
   // Core call to the generate API. `instruction` is the idea for a fresh
   // generation, or the revision instruction when `previousResult` is passed.
   const runGenerate = async (
@@ -63,9 +85,23 @@ export default function DashboardPage() {
 
       const data = await response.json();
 
+      // Guest hit the wall (limit reached, or a signup-only action). Sync the
+      // local flag in case the server cookie is ahead of localStorage.
+      if (data.signupRequired) {
+        setIsGuest(true);
+        setGuestUsed(true);
+        localStorage.setItem(GUEST_USED_KEY, "1");
+        setShowWall(true);
+        return false;
+      }
+
       if (data.result) {
         setOutput(data.result);
         setLastPromptId(data.id ?? null);
+        if (data.guest) {
+          setGuestUsed(true);
+          localStorage.setItem(GUEST_USED_KEY, "1");
+        }
         return true;
       } else {
         setOutput("Error: " + data.error);
@@ -78,10 +114,16 @@ export default function DashboardPage() {
   };
 
   const handleGenerate = async () => {
+    // Known-spent guest: show the wall without a wasted round trip.
+    if (isGuest && guestUsed) {
+      setShowWall(true);
+      return;
+    }
     if (!idea) return alert("Please enter an idea first.");
 
     setLoading(true);
     setOutput("");
+    setShowWall(false);
     await runGenerate(idea);
     setLoading(false);
   };
@@ -187,42 +229,59 @@ export default function DashboardPage() {
               </ReactMarkdown>
             </div>
 
-            {/* Share-to-gallery CTA — appears once a result exists. */}
-            <Link
-              href={lastPromptId ? `/submit?promptId=${lastPromptId}` : "/submit"}
-              className="flex items-center justify-between gap-3 rounded-lg border border-blue-900/50 bg-blue-950/20 px-4 py-3 transition-colors hover:border-blue-800 hover:bg-blue-950/40"
-            >
-              <span className="flex items-center gap-2 text-sm text-blue-200">
-                <Share2 className="h-4 w-4" />
-                Got a result from this prompt? Share it in the gallery
-              </span>
-              <span className="text-sm font-semibold text-blue-300">→</span>
-            </Link>
-
-            {/* Refine / follow-up */}
-            <div className="border-t border-zinc-800 pt-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Refine this blueprint</label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
-                  placeholder="e.g. make it darker, add rain"
-                  value={refineInput}
-                  onChange={(e) => setRefineInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleRefine();
-                  }}
-                  disabled={refining}
-                />
-                <button
-                  onClick={handleRefine}
-                  disabled={refining || !refineInput}
-                  className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
+            {/* Share + Refine are signup-only, so hide them for guests. */}
+            {!isGuest && (
+              <>
+                {/* Share-to-gallery CTA — appears once a result exists. */}
+                <Link
+                  href={lastPromptId ? `/submit?promptId=${lastPromptId}` : "/submit"}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-blue-900/50 bg-blue-950/20 px-4 py-3 transition-colors hover:border-blue-800 hover:bg-blue-950/40"
                 >
-                  {refining ? "Refining..." : "Refine"}
-                </button>
-              </div>
-            </div>
+                  <span className="flex items-center gap-2 text-sm text-blue-200">
+                    <Share2 className="h-4 w-4" />
+                    Got a result from this prompt? Share it in the gallery
+                  </span>
+                  <span className="text-sm font-semibold text-blue-300">→</span>
+                </Link>
+
+                {/* Refine / follow-up */}
+                <div className="border-t border-zinc-800 pt-4">
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">Refine this blueprint</label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
+                      placeholder="e.g. make it darker, add rain"
+                      value={refineInput}
+                      onChange={(e) => setRefineInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRefine();
+                      }}
+                      disabled={refining}
+                    />
+                    <button
+                      onClick={handleRefine}
+                      disabled={refining || !refineInput}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      {refining ? "Refining..." : "Refine"}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+        )}
+
+        {/* Signup wall — shown to guests after their free result, or when they
+            try a signup-only action. */}
+        {isGuest && (output || showWall) && (
+          <SignupWall
+            subtitle={
+              output
+                ? "That's your free prompt — sign up to generate more, refine, and save it."
+                : "You've used your free prompt on this browser."
+            }
+          />
         )}
 
       </div>
