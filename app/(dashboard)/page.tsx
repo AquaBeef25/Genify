@@ -2,38 +2,92 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Share2 } from "lucide-react";
+import { Share2, Sparkles, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { createClient } from "../lib/supabase";
 import SignupWall from "../components/shared/SignupWall";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import Skeleton from "../components/ui/Skeleton";
+import Switch from "../components/ui/Switch";
+import { Field, Label, Input, Textarea } from "../components/ui/Field";
+import { cn } from "../components/ui/cn";
 
 // Mirror of the server's HttpOnly guest cookie, for instant UX (the cookie
 // stays authoritative server-side).
 const GUEST_USED_KEY = "guest_gen_used";
 
+const FORMATS = [
+  { value: "tiktok", title: "TikTok / Reels", sub: "Vertical short" },
+  { value: "youtube", title: "YouTube", sub: "Horizontal long" },
+  { value: "commercial", title: "Cinematic", sub: "Commercial" },
+];
+
+const FORMAT_LABEL: Record<string, string> = {
+  tiktok: "TikTok / Reels",
+  youtube: "YouTube",
+  commercial: "Cinematic",
+};
+
 // Shared markdown styling so both the default blueprint and the storyboard
 // (which uses h2 headings and horizontal rules between scenes) render cleanly.
 const markdownComponents = {
+  h1: ({ children }: { children?: React.ReactNode }) => (
+    <h1 className="mt-6 mb-3 text-xl font-bold text-ink first:mt-0">{children}</h1>
+  ),
   h2: ({ children }: { children?: React.ReactNode }) => (
-    <h2 className="text-xl font-bold text-white mt-6 mb-2 first:mt-0">{children}</h2>
+    <h2 className="mt-6 mb-2.5 flex items-center gap-2.5 text-[15px] font-bold text-ink first:mt-0">
+      <span className="accent-gradient h-4 w-1 shrink-0 rounded-full" />
+      {children}
+    </h2>
   ),
   h3: ({ children }: { children?: React.ReactNode }) => (
-    <h3 className="text-lg font-bold text-white mt-5 mb-2 first:mt-0">{children}</h3>
+    <h3 className="mt-5 mb-2 text-sm font-semibold text-accent-ink first:mt-0">{children}</h3>
   ),
   p: ({ children }: { children?: React.ReactNode }) => (
-    <p className="text-zinc-300 leading-relaxed mb-4">{children}</p>
+    <p className="mb-3.5 text-[14.5px] leading-relaxed text-zinc-300">{children}</p>
   ),
   strong: ({ children }: { children?: React.ReactNode }) => (
-    <strong className="font-bold text-white">{children}</strong>
+    <strong className="font-semibold text-ink">{children}</strong>
   ),
   ul: ({ children }: { children?: React.ReactNode }) => (
-    <ul className="list-disc pl-5 mb-4 text-zinc-300 space-y-1">{children}</ul>
+    <ul className="mb-3.5 space-y-1.5">{children}</ul>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
-    <li className="text-zinc-300">{children}</li>
+    <li className="relative pl-5 text-[14px] leading-relaxed text-zinc-300">
+      <span className="absolute left-0 top-[9px] h-1.5 w-1.5 rounded-full bg-accent" />
+      {children}
+    </li>
   ),
-  hr: () => <hr className="my-6 border-zinc-800" />,
+  hr: () => <hr className="my-6 border-line" />,
+  pre: ({ children }: { children?: React.ReactNode }) => (
+    <pre className="mb-3.5 overflow-x-auto rounded-lg border border-line border-l-[3px] border-l-accent bg-canvas p-4 font-mono text-[13px] leading-relaxed text-[#d6d3ff]">
+      {children}
+    </pre>
+  ),
+  code: ({ children }: { children?: React.ReactNode }) => (
+    <code className="font-mono text-[13px] text-[#d6d3ff]">{children}</code>
+  ),
 };
+
+function ResultSkeleton() {
+  return (
+    <Card className="animate-rise p-6">
+      <div className="mb-5 flex items-center justify-between border-b border-line pb-4">
+        <Skeleton className="h-5 w-44" />
+        <Skeleton className="h-7 w-20" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-11/12" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="mt-2 h-24 w-full" />
+      </div>
+    </Card>
+  );
+}
 
 export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
@@ -148,108 +202,156 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6 md:p-10 text-white">
+    <div className="relative overflow-x-clip">
+      <div className="mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-12">
+        {/* Hero */}
+        <header className="hero-glow relative mb-8">
+          <span className="relative z-[1] mb-3.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-ink">
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+            Generator
+          </span>
+          <h1 className="relative z-[1] max-w-[20ch] text-3xl font-bold tracking-tight text-balance text-ink">
+            Turn an idea into a shot-ready prompt.
+          </h1>
+          <p className="relative z-[1] mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted">
+            Describe a core idea, pick a format, and Genify directs it into a
+            production-ready blueprint — hook, visual style, and an optimized
+            AI-video prompt.
+          </p>
+        </header>
 
-      {/* Top Section / Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Discover Prompts</h1>
-        <p className="text-sm text-zinc-400">Explore and generate production-ready AI instructions.</p>
-      </div>
-
-      {/* Main Content Workspace Grid */}
-      <div className="grid gap-6 max-w-4xl">
-
-        {/* The Generator Input Card */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Your Core Idea</label>
-              <textarea
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
+        {/* Generator input card */}
+        <Card className="mb-6 p-6">
+          <div className="grid gap-6">
+            <Field>
+              <Label htmlFor="idea">Your core idea</Label>
+              <Textarea
+                id="idea"
                 rows={3}
                 placeholder="e.g. A tutorial on baking sourdough bread..."
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Target Format</label>
-              <select
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
+            <Field>
+              <Label>Target format</Label>
+              <div
+                className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+                role="group"
+                aria-label="Target format"
               >
-                <option value="tiktok">TikTok / Reels (Vertical Short)</option>
-                <option value="youtube">YouTube (Horizontal Long)</option>
-                <option value="commercial">Cinematic Commercial</option>
-              </select>
-            </div>
+                {FORMATS.map((f) => {
+                  const active = format === f.value;
+                  return (
+                    <button
+                      key={f.value}
+                      type="button"
+                      onClick={() => setFormat(f.value)}
+                      aria-pressed={active}
+                      className={cn(
+                        "flex flex-col gap-0.5 rounded-lg border px-3.5 py-3 text-left transition-colors",
+                        active
+                          ? "border-accent/30 bg-accent/10 text-white"
+                          : "border-line bg-canvas text-muted hover:border-line-strong hover:text-ink"
+                      )}
+                    >
+                      <span className="text-[13.5px] font-semibold">{f.title}</span>
+                      <span
+                        className={cn(
+                          "text-[11px]",
+                          active ? "text-accent-ink" : "text-subtle"
+                        )}
+                      >
+                        {f.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
 
-            {/* Storyboard toggle */}
-            <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 accent-blue-500"
+            <div className="flex items-center gap-3 py-0.5">
+              <Switch
+                id="storyboard"
                 checked={storyboard}
-                onChange={(e) => setStoryboard(e.target.checked)}
+                onChange={setStoryboard}
+                aria-label="Storyboard mode"
               />
-              <span className="text-sm text-zinc-300">
-                Storyboard mode
-                <span className="text-zinc-500"> — break the idea into a shot-by-shot breakdown</span>
-              </span>
-            </label>
-
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="w-full bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors"
-            >
-              {loading ? "Architecting..." : "Generate Prompt"}
-            </button>
-          </div>
-        </div>
-
-        {/* The Result Output Card */}
-        {output && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
-              <span className="text-sm font-medium text-zinc-300">Generated Blueprint</span>
-              <button
-                onClick={handleCopy}
-                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-1.5 px-3 rounded-md transition-colors border border-zinc-700"
-              >
-                {copied ? "✓ Copied!" : "Copy to Clipboard"}
-              </button>
+              <div className="text-[13.5px] leading-tight">
+                <span className="font-medium text-ink">Storyboard mode</span>
+                <span className="block text-xs text-subtle">
+                  Break the idea into a shot-by-shot breakdown
+                </span>
+              </div>
             </div>
 
-            <div className="text-sm overflow-x-auto">
-              <ReactMarkdown components={markdownComponents}>
-                {output}
-              </ReactMarkdown>
+            <Button
+              variant="primary"
+              className="w-full"
+              loading={loading}
+              onClick={handleGenerate}
+            >
+              {!loading && <Sparkles className="h-[17px] w-[17px]" />}
+              {loading ? "Architecting…" : "Generate prompt"}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Loading skeleton (initial generation only) */}
+        {loading && <ResultSkeleton />}
+
+        {/* Result */}
+        {output && (
+          <Card className="animate-rise overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-6 py-4">
+              <div className="flex items-center gap-3">
+                <Badge>{FORMAT_LABEL[format] ?? format}</Badge>
+                <span className="text-[13.5px] font-semibold text-muted">
+                  Generated blueprint
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleCopy}>
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4 text-success" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div className="px-6 py-5">
+              <ReactMarkdown components={markdownComponents}>{output}</ReactMarkdown>
             </div>
 
             {/* Share + Refine are signup-only, so hide them for guests. */}
             {!isGuest && (
-              <>
+              <div className="grid gap-4 px-6 pb-6">
                 {/* Share-to-gallery CTA — appears once a result exists. */}
                 <Link
                   href={lastPromptId ? `/submit?promptId=${lastPromptId}` : "/submit"}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-blue-900/50 bg-blue-950/20 px-4 py-3 transition-colors hover:border-blue-800 hover:bg-blue-950/40"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-accent-ink transition hover:brightness-125"
                 >
-                  <span className="flex items-center gap-2 text-sm text-blue-200">
+                  <span className="flex items-center gap-2 text-sm font-medium">
                     <Share2 className="h-4 w-4" />
                     Got a result from this prompt? Share it in the gallery
                   </span>
-                  <span className="text-sm font-semibold text-blue-300">→</span>
+                  <span className="text-sm font-bold">→</span>
                 </Link>
 
                 {/* Refine / follow-up */}
-                <div className="border-t border-zinc-800 pt-4">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Refine this blueprint</label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
+                <div className="grid gap-2.5 border-t border-line pt-4">
+                  <Label htmlFor="refine">Refine this blueprint</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      id="refine"
+                      className="flex-1"
                       placeholder="e.g. make it darker, add rain"
                       value={refineInput}
                       onChange={(e) => setRefineInput(e.target.value)}
@@ -258,32 +360,35 @@ export default function DashboardPage() {
                       }}
                       disabled={refining}
                     />
-                    <button
+                    <Button
+                      variant="accent"
                       onClick={handleRefine}
-                      disabled={refining || !refineInput}
-                      className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
+                      loading={refining}
+                      disabled={!refineInput}
+                      className="whitespace-nowrap sm:w-auto"
                     >
-                      {refining ? "Refining..." : "Refine"}
-                    </button>
+                      Refine
+                    </Button>
                   </div>
                 </div>
-              </>
+              </div>
             )}
-          </div>
+          </Card>
         )}
 
         {/* Signup wall — shown to guests after their free result, or when they
             try a signup-only action. */}
         {isGuest && (output || showWall) && (
-          <SignupWall
-            subtitle={
-              output
-                ? "That's your free prompt — sign up to generate more, refine, and save it."
-                : "You've used your free prompt on this browser."
-            }
-          />
+          <div className="mt-6">
+            <SignupWall
+              subtitle={
+                output
+                  ? "That's your free prompt — sign up to generate more, refine, and save it."
+                  : "You've used your free prompt on this browser."
+              }
+            />
+          </div>
         )}
-
       </div>
     </div>
   );

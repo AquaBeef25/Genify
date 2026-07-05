@@ -2,15 +2,20 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '../.././lib/supabase';
+import { createClient } from '../../lib/supabase';
+import Brand from '../../components/layout/Brand';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import { Field, Label, Input } from '../../components/ui/Field';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   // Initialize our secure database client
   const supabase = createClient();
 
@@ -18,6 +23,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setNotice(null);
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -27,7 +33,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
-      setError('Success! Check your email to confirm your account.');
+      setNotice('Account created — check your email to confirm, then sign in.');
     }
     setLoading(false);
   };
@@ -36,6 +42,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setNotice(null);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -47,66 +54,94 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       // If login is successful, send them to the protected dashboard
-      router.push('/'); 
+      router.push('/');
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black p-4 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Prompt Architect</h1>
-          <p className="mt-2 text-sm text-zinc-400">Sign in or create an account to start generating.</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas px-4 py-10 text-ink">
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] max-w-full -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(124,108,246,0.14),transparent)]"
+      />
+
+      <div className="relative w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Brand />
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-ink">
+            Welcome to Genify
+          </h1>
+          <p className="mt-2 max-w-sm text-sm text-muted">
+            Turn a one-line idea into a directed, production-ready AI-video
+            prompt.
+          </p>
         </div>
 
-        <form className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-zinc-300">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="marvin@example.com"
-              required
-            />
-          </div>
+        <Card className="p-8">
+          <form className="space-y-5">
+            <Field>
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="marvin@example.com"
+                required
+              />
+            </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-300">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="••••••••"
-              required
-            />
-          </div>
+            <Field>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </Field>
 
-          {error && (
-            <div className="rounded-lg bg-red-900/50 p-3 text-sm text-red-400 border border-red-800">
-              {error}
+            {error && (
+              <div className="rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+                {error}
+              </div>
+            )}
+
+            {notice && (
+              <div className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-success">
+                {notice}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                loading={loading}
+                onClick={handleSignIn}
+              >
+                Sign in
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                disabled={loading}
+                onClick={handleSignUp}
+              >
+                Create account
+              </Button>
             </div>
-          )}
+          </form>
+        </Card>
 
-          <div className="flex gap-4">
-            <button
-              onClick={handleSignIn}
-              disabled={loading}
-              className="w-full rounded-lg bg-white px-4 py-3 font-semibold text-black transition-colors hover:bg-zinc-200 disabled:opacity-50"
-            >
-              {loading ? 'Processing...' : 'Sign In'}
-            </button>
-            <button
-              onClick={handleSignUp}
-              disabled={loading}
-              className="w-full rounded-lg border border-zinc-700 bg-transparent px-4 py-3 font-semibold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
-            >
-              Sign Up
-            </button>
-          </div>
-        </form>
+        <p className="mt-6 text-center text-xs text-subtle">
+          Free to start. No credit card required.
+        </p>
       </div>
     </div>
   );

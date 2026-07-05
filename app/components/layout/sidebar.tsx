@@ -5,30 +5,34 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Sparkles,
-  Settings,
   LogOut,
-  CreditCard,
   LayoutDashboard,
   LayoutGrid,
   Upload,
   ShieldCheck,
 } from 'lucide-react';
 import { createClient } from '../../lib/supabase';
+import { cn } from '../ui/cn';
+import Brand from './Brand';
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
 
-  // Show the Moderation link only to the admin. This is cosmetic — the /admin
-  // page and the RLS UPDATE policy are the real guards.
+  // Load the signed-in user once: drives the identity block, and the admin-only
+  // Moderation link. This is cosmetic — the /admin page and the RLS UPDATE
+  // policy are the real guards.
   useEffect(() => {
     const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
-    if (!adminId) return;
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user?.id === adminId) setIsAdmin(true);
+      const user = data?.user;
+      if (!user) return;
+      setEmail(user.email ?? null);
+      if (adminId && user.id === adminId) setIsAdmin(true);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -38,56 +42,91 @@ export default function Sidebar() {
     router.push('/login');
   };
 
-  const navItems = [
-    { name: 'Discover', href: '/', icon: LayoutDashboard },
-    { name: 'My Prompts', href: '/history', icon: Sparkles },
-    { name: 'Community Gallery', href: '/gallery', icon: LayoutGrid },
-    { name: 'Share Result', href: '/submit', icon: Upload },
-    ...(isAdmin
-      ? [{ name: 'Moderation', href: '/admin', icon: ShieldCheck }]
-      : []),
-    { name: 'Billing', href: '/billing', icon: CreditCard },
-    { name: 'Settings', href: '/settings', icon: Settings },
+  const groups = [
+    {
+      label: 'Create',
+      items: [
+        { name: 'Discover', href: '/', icon: LayoutDashboard },
+        { name: 'My Prompts', href: '/history', icon: Sparkles },
+      ],
+    },
+    {
+      label: 'Community',
+      items: [
+        { name: 'Community Gallery', href: '/gallery', icon: LayoutGrid },
+        { name: 'Share Result', href: '/submit', icon: Upload },
+        ...(isAdmin
+          ? [{ name: 'Moderation', href: '/admin', icon: ShieldCheck }]
+          : []),
+      ],
+    },
   ];
 
-  return (
-    <div className="flex h-screen w-64 flex-col border-r border-zinc-800 bg-zinc-950 p-4 text-white">
-      <div className="mb-8 flex items-center gap-3 px-2 mt-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        <span className="text-xl font-bold tracking-tight">Architect</span>
-      </div>
+  const name = email ? email.split('@')[0] : 'Account';
+  const initial = email ? email[0]!.toUpperCase() : 'G';
 
-      <nav className="flex-1 space-y-1.5">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.name}
-            </Link>
-          );
-        })}
+  return (
+    <aside className="flex h-screen w-64 flex-col gap-2 border-r border-line bg-canvas p-4">
+      <Brand className="px-2 pb-4 pt-2" />
+
+      <nav className="flex-1 space-y-6 overflow-y-auto">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <div className="px-3 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">
+              {group.label}
+            </div>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium transition-all',
+                      isActive
+                        ? 'border-accent/30 bg-accent/10 text-white'
+                        : 'text-muted hover:bg-surface hover:text-ink'
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        'h-[17px] w-[17px]',
+                        isActive ? 'text-accent' : 'text-subtle'
+                      )}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <div className="mt-auto pt-4 border-t border-zinc-800">
+      <div className="mt-auto flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5">
+        <span className="accent-gradient grid h-8 w-8 shrink-0 place-items-center rounded-[9px] text-sm font-semibold text-white">
+          {initial}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xs font-semibold capitalize text-ink">
+            {name}
+          </div>
+          <div className="truncate text-[11px] text-subtle">
+            {email ?? 'Not signed in'}
+          </div>
+        </div>
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-red-900/20 hover:text-red-400"
+          aria-label="Sign out"
+          title="Sign out"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-subtle transition-colors hover:bg-danger/10 hover:text-danger"
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
         </button>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -1,6 +1,9 @@
 'use client'; // Error boundaries must be Client Components
 
 import { useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 export default function ErrorBoundary({
   error,
@@ -11,29 +14,30 @@ export default function ErrorBoundary({
 }) {
   useEffect(() => {
     // This logs the error to your browser console too
-    console.error("Caught by Error Boundary:", error);
+    console.error('Caught by Error Boundary:', error);
   }, [error]);
 
   return (
-    <div className="flex h-[80vh] flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-xl rounded-xl border border-red-900 bg-red-950/30 p-8 shadow-2xl">
-        <h2 className="mb-4 text-2xl font-bold text-red-500">System Crash Detected</h2>
-        <p className="mb-6 text-sm text-red-200">
-          The server component failed to render. Here is the exact reason:
+    <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 text-center">
+      <Card className="max-w-xl p-8">
+        <div className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-xl border border-danger/40 bg-danger/10 text-danger">
+          <AlertTriangle className="h-5 w-5" />
+        </div>
+        <h2 className="mb-2 text-xl font-bold text-ink">
+          Something went wrong loading your prompts
+        </h2>
+        <p className="mb-6 text-sm text-muted">
+          We hit an error while rendering this page. The details:
         </p>
-        
-        {/* This box prints the actual crash reason */}
-        <div className="mb-6 rounded bg-black/50 p-4 text-left font-mono text-sm text-red-400 overflow-auto">
+
+        <div className="mb-6 overflow-auto rounded-lg border border-line bg-canvas p-4 text-left font-mono text-sm text-danger">
           {error.message}
         </div>
 
-        <button
-          onClick={() => reset()}
-          className="rounded-lg bg-white px-6 py-2 font-semibold text-black hover:bg-zinc-200 transition-colors"
-        >
-          Attempt Recovery (Refresh)
-        </button>
-      </div>
+        <Button variant="primary" onClick={() => reset()}>
+          Try again
+        </Button>
+      </Card>
     </div>
   );
 }

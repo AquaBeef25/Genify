@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Trash2, Share2 } from "lucide-react";
+import { Card } from "../ui/Card";
+import { cn } from "../ui/cn";
 
 export type Prompt = {
   id: string;
@@ -11,6 +13,19 @@ export type Prompt = {
   core_idea: string;
   generated_result: string;
   created_at: string;
+};
+
+const FORMAT_LABEL: Record<string, string> = {
+  tiktok: "TikTok / Reels",
+  youtube: "YouTube",
+  commercial: "Cinematic",
+};
+
+// Subtle per-format tint so the grid is easy to scan without shouting color.
+const FORMAT_BADGE: Record<string, string> = {
+  tiktok: "border-violet-400/30 bg-violet-400/10 text-violet-200",
+  youtube: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+  commercial: "border-amber-400/30 bg-amber-400/10 text-amber-200",
 };
 
 // Reusable history card. Extracted from history/page.tsx so the delete action
@@ -36,20 +51,26 @@ export default function PromptCard({
   };
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm transition-all hover:border-zinc-700 hover:bg-zinc-900">
-      <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/50 px-4 py-3">
-        <span className="rounded-full bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-400 uppercase tracking-wider">
-          {prompt.format}
+    <Card className="flex flex-col overflow-hidden transition-colors hover:border-line-strong">
+      <div className="flex items-center justify-between border-b border-line px-4 py-3">
+        <span
+          className={cn(
+            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider",
+            FORMAT_BADGE[prompt.format] ??
+              "border-accent/30 bg-accent/10 text-accent-ink"
+          )}
+        >
+          {FORMAT_LABEL[prompt.format] ?? prompt.format}
         </span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-500">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs text-subtle">
             {new Date(prompt.created_at).toLocaleDateString()}
           </span>
           <Link
             href={`/submit?promptId=${prompt.id}`}
             aria-label="Share a result from this prompt"
             title="Share a result"
-            className="text-zinc-500 hover:text-blue-400 transition-colors"
+            className="text-subtle transition-colors hover:text-accent"
           >
             <Share2 className="h-4 w-4" />
           </Link>
@@ -58,22 +79,32 @@ export default function PromptCard({
             disabled={deleting}
             aria-label="Delete prompt"
             title="Delete prompt"
-            className="text-zinc-500 hover:text-red-400 disabled:text-zinc-700 transition-colors"
+            className="text-subtle transition-colors hover:text-danger disabled:text-faint"
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className="p-4 text-sm text-zinc-300">
-        <div className="mb-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Original Idea</div>
-        <p className="mb-6 line-clamp-2 text-zinc-200">&quot;{prompt.core_idea}&quot;</p>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-faint">
+          Original idea
+        </div>
+        <p className="mb-4 line-clamp-2 text-sm text-ink">
+          &quot;{prompt.core_idea}&quot;
+        </p>
 
-        <div className="mb-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">Generated Output</div>
-        <div className="h-48 overflow-y-auto rounded-lg bg-zinc-950 p-3 text-xs scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800">
-          <ReactMarkdown>{prompt.generated_result}</ReactMarkdown>
+        <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-faint">
+          Generated output
+        </div>
+        <div className="relative">
+          <div className="scrollbar-thin h-44 overflow-y-auto rounded-lg border border-line bg-canvas p-3 text-xs leading-relaxed text-zinc-400">
+            <ReactMarkdown>{prompt.generated_result}</ReactMarkdown>
+          </div>
+          {/* Fade the bottom edge to hint at more content. */}
+          <div className="pointer-events-none absolute inset-x-px bottom-px h-8 rounded-b-lg bg-[linear-gradient(to_top,var(--color-canvas),transparent)]" />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

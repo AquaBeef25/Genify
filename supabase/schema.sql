@@ -161,3 +161,17 @@ create policy "Users can remove own likes"
   on public.submission_likes for delete
   to authenticated
   using ((select auth.uid()) = user_id);
+
+
+-- ----------------------------------------------------------------------------
+-- 5. prompts — DELETE policy fix
+-- ----------------------------------------------------------------------------
+-- The `prompts` table is created/managed by the app (app/api/generate inserts
+-- into it) and has RLS enabled with only SELECT + INSERT policies. Without a
+-- DELETE policy, "delete prompt" in /history silently affected 0 rows (RLS
+-- default-deny returns success with no error), so deleted prompts reappeared on
+-- refresh. This lets a user delete only their own prompts.
+drop policy if exists "Users can delete their own prompts" on public.prompts;
+create policy "Users can delete their own prompts"
+  on public.prompts for delete
+  using (auth.uid() = user_id);
