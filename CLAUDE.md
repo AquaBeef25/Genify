@@ -13,11 +13,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **No test suite.** There is no test runner configured — `npm run lint`
   (ESLint) is the only automated check. Don't invent a `test` script; verify
   changes by running the app (`npm run dev`) and driving the affected route.
-- **No `middleware.ts`.** Supabase session cookies are only *read* in
-  `app/api/generate/route.ts` (the inline `createServerClient` supplies a
-  `get`-only cookie adapter — no `set`/`remove`). Session refresh is therefore
-  not wired up; if you touch auth, add a middleware to persist refreshed
-  sessions rather than assuming one exists.
+- **Auth is gated in `proxy.ts`.** Next.js 16 renamed the `middleware` file
+  convention to `proxy`. `proxy.ts` (repo root) runs before every route except
+  `/login`: it redirects logged-out visitors to `/login` and persists refreshed
+  Supabase session cookies. Guest generation was removed — `/api/generate` now
+  rejects any request without a session.
+- **Use the design system.** The UI is dark & minimal with a single
+  indigo/violet accent. Semantic color tokens live in `app/globals.css`
+  (`@theme`) and generate utilities (`bg-surface`, `text-muted`, `border-line`,
+  `text-accent`, …); reusable primitives live in `app/components/ui/` (`Button`,
+  `Card`, `Field`, `Badge`, `Spinner`, `Skeleton`, `Switch`). Build UI from
+  these rather than hand-rolling raw `zinc-*` classes. Fonts are Geist via
+  `next/font` in `app/layout.tsx`.
 - **Env var naming is non-standard.** The Supabase anon key is read as
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (not the conventional `..._ANON_KEY`),
   and `route.ts` falls back to a misspelled `GEMENI_API_KEY`. Match existing
@@ -102,10 +109,15 @@ app/
 │
 └── components/
     ├── layout/
-    │   ├── sidebar.tsx            # App navigation + sign out
-    │   └── FloatingPromptBar.tsx # (empty stub)
+    │   ├── AppShell.tsx           # Responsive frame (sidebar + mobile slide-over)
+    │   ├── sidebar.tsx            # Grouped nav, user block, sign out
+    │   ├── Brand.tsx              # Genify wordmark / logo
+    │   └── FloatingPromptBar.tsx  # (empty stub)
+    ├── ui/                        # Design-system primitives: Button, Card, Field,
+    │                              #   Badge, Spinner, Skeleton, Switch, cn
     └── shared/
-        └── PromptCard.tsx        # (empty stub)
+        ├── PromptCard.tsx         # History card: format badge, preview, delete
+        └── SignupWall.tsx         # Guest signup CTA
 ```
 
 > Routes are grouped with Next.js **route groups**: `(auth)` and `(dashboard)`
@@ -165,12 +177,15 @@ Email/password form with **Sign In** (`signInWithPassword` → redirect to `/`)
 and **Sign Up** (`signUp` → prompt to confirm via email).
 
 ### `app/components/layout/sidebar.tsx` — Navigation
-Persistent left sidebar with links (Discover, My Prompts, Billing, Settings)
-and a **Sign Out** action. Highlights the active route via `usePathname`.
+Left sidebar grouped into **Create** (Discover, My Prompts) and **Community**
+(Community Gallery, Share Result, plus **Moderation** for the admin). Shows the
+signed-in user + a **Sign Out** action and highlights the active route via
+`usePathname`. `AppShell.tsx` wraps it to add a responsive mobile top bar +
+slide-over.
 
-> `Billing` and `Settings` routes are linked in the nav but not yet
-> implemented. `FloatingPromptBar.tsx` and `PromptCard.tsx` are empty
-> placeholder files.
+> Billing/Settings were removed (the app is free, with per-IP rate limiting).
+> `FloatingPromptBar.tsx` is still an empty placeholder; `PromptCard.tsx` is now
+> implemented (`app/components/shared/`).
 
 ---
 
@@ -187,6 +202,10 @@ inferred from usage:
 | `format` | Target format (`tiktok` / `youtube` / `commercial`) |
 | `generated_result` | The Gemini-generated Markdown |
 | `created_at` | Timestamp (used for ordering history) |
+
+> **RLS:** users can `select` / `insert` / `delete` only their own rows
+> (`auth.uid() = user_id`). The `prompts` table was created in the Supabase
+> dashboard, but its DELETE policy is documented in `supabase/schema.sql` (§5).
 
 ### Community gallery tables
 
