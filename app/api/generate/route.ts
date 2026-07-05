@@ -5,11 +5,6 @@ import { buildPrompt } from "../../lib/prompts";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Marks that an unauthenticated visitor has spent their single free
-// generation. HttpOnly so page JS can't trivially clear it; ~30 days.
-const GUEST_COOKIE = "guest_gen_used";
-const GUEST_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days, in seconds
-
 export async function POST(request: Request) {
   try {
     // 1. SECURITY LAYER: per-IP rate limiter (burst / automated-abuse backstop)
@@ -32,7 +27,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing idea" }, { status: 400 });
     }
 
-    // 3. AUTHENTICATION — guests are allowed ONE free generation.
+    // 3. AUTHENTICATION — a valid Supabase session is required. Logged-out
+    //    visitors are already bounced to /login by proxy.ts, so this endpoint
+    //    simply rejects any request that arrives without a session (e.g. a
+    //    direct API call).
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,28 +47,14 @@ export async function POST(request: Request) {
     const { data, error: authError } = await supabase.auth.getUser();
     const user = authError ? null : data?.user ?? null;
 
-    // 4. GUEST GATING (only when there is no session)
     if (!user) {
-      // Refining is a signup-only action.
-      if (previousResult) {
-        return NextResponse.json(
-          { error: "Sign up to refine your prompt.", signupRequired: true },
-          { status: 401 }
-        );
-      }
-      // Already spent the one free generation? Reject BEFORE calling Gemini.
-      if (cookieStore.get(GUEST_COOKIE)) {
-        return NextResponse.json(
-          {
-            error: "You've used your free prompt. Sign up to keep generating.",
-            signupRequired: true,
-          },
-          { status: 401 }
-        );
-      }
+      return NextResponse.json(
+        { error: "You must be signed in to generate prompts." },
+        { status: 401 }
+      );
     }
 
-    // 5. GENERATE VIA GEMINI (shared by guests and authed users)
+    // 4. GENERATE VIA GEMINI
     const apiKey = process.env.GEMINI_API_KEY || process.env.GEMENI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "Missing Gemini API key." }, { status: 500 });
@@ -82,19 +66,7 @@ export async function POST(request: Request) {
     const result = await model.generateContent(finalPrompt);
     const generatedText = result.response.text();
 
-    // 6. GUEST: mark the free gen spent, skip persistence, return.
-    if (!user) {
-      cookieStore.set(GUEST_COOKIE, "1", {
-        httpOnly: true,
-        path: "/",
-        maxAge: GUEST_COOKIE_MAX_AGE,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      });
-      return NextResponse.json({ result: generatedText, id: null, guest: true });
-    }
-
-    // 7. AUTHED: persist and return the saved row id.
+    // 5. PERSIST and return the saved row id.
     const { data: savedPrompt, error: dbError } = await supabase
       .from("prompts")
       .insert({
