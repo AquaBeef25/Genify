@@ -23,9 +23,9 @@ const FORMAT_LABEL: Record<string, string> = {
 
 // Subtle per-format tint so the grid is easy to scan without shouting color.
 const FORMAT_BADGE: Record<string, string> = {
-  tiktok: "border-violet-400/30 bg-violet-400/10 text-violet-200",
-  youtube: "border-sky-400/30 bg-sky-400/10 text-sky-200",
-  commercial: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+  tiktok: "border-accent/30 bg-accent/10 text-accent-ink",
+  youtube: "border-[#6496c8]/40 bg-[#6496c8]/12 text-[#4f7ba8]",
+  commercial: "border-[#9678b4]/40 bg-[#9678b4]/12 text-[#7a5f9a]",
 };
 
 // Reusable history card. Extracted from history/page.tsx so the delete action
@@ -98,11 +98,11 @@ export default function PromptCard({
           Generated output
         </div>
         <div className="relative">
-          <div className="scrollbar-thin h-44 overflow-y-auto rounded-lg border border-line bg-canvas p-3 text-xs leading-relaxed text-zinc-400">
+          <div className="scrollbar-thin h-44 overflow-y-auto rounded-lg border border-line bg-surface-2 p-3 text-xs leading-relaxed text-muted">
             <ReactMarkdown>{prompt.generated_result}</ReactMarkdown>
           </div>
           {/* Fade the bottom edge to hint at more content. */}
-          <div className="pointer-events-none absolute inset-x-px bottom-px h-8 rounded-b-lg bg-[linear-gradient(to_top,var(--color-canvas),transparent)]" />
+          <div className="pointer-events-none absolute inset-x-px bottom-px h-8 rounded-b-lg bg-[linear-gradient(to_top,var(--color-surface-2),transparent)]" />
         </div>
       </div>
     </Card>

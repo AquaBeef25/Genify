@@ -223,7 +223,7 @@ export default function SubmitPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-muted">
-                Link <span className="text-zinc-600">(optional)</span>
+                Link <span className="text-faint">(optional)</span>
               </label>
               <input
                 className={inputClass}

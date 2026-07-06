@@ -63,7 +63,7 @@ export default function LoginPage() {
       {/* Ambient glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] max-w-full -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(124,108,246,0.14),transparent)]"
+        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] max-w-full -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(217,119,87,0.12),transparent)]"
       />
 
       <div className="relative w-full max-w-md">

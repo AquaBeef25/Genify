@@ -66,14 +66,14 @@ export default async function PromptPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <nav className="mb-6 text-sm text-zinc-400">
-        <Link href="/prompt" className="hover:text-white">
+      <nav className="mb-6 text-sm text-muted">
+        <Link href="/prompt" className="hover:text-ink">
           ← Prompt Library
         </Link>
       </nav>
 
       {video && (
-        <div className="mb-6 aspect-video w-full overflow-hidden rounded-xl border border-zinc-800 bg-black">
+        <div className="mb-6 aspect-video w-full overflow-hidden rounded-xl border border-line bg-black">
           <iframe
             src={video.embedUrl}
             title="Video result"
@@ -85,38 +85,38 @@ export default async function PromptPage({ params }: Props) {
       )}
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-        <span className="rounded-full border border-zinc-700 px-2.5 py-1 font-medium text-zinc-300">
+        <span className="rounded-full border border-line px-2.5 py-1 font-medium text-muted">
           {submission.platform}
         </span>
         {submission.model_version && (
-          <span className="rounded-full border border-zinc-800 px-2.5 py-1 text-zinc-400">
+          <span className="rounded-full border border-line px-2.5 py-1 text-subtle">
             {submission.model_version}
           </span>
         )}
         {submission.submitter_name && (
-          <span className="text-zinc-500">
+          <span className="text-subtle">
             by{" "}
             {submission.submitter_url ? (
               <a
                 href={submission.submitter_url}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="text-zinc-400 underline hover:text-white"
+                className="text-accent-ink underline hover:brightness-105"
               >
                 {submission.submitter_name}
               </a>
             ) : (
-              <span className="text-zinc-400">{submission.submitter_name}</span>
+              <span className="text-muted">{submission.submitter_name}</span>
             )}
           </span>
         )}
       </div>
 
-      <h1 className="mb-4 text-2xl font-bold tracking-tight text-white">
+      <h1 className="mb-4 font-serif text-3xl font-bold tracking-tight text-ink">
         AI Video Prompt
       </h1>
 
-      <div className="mb-6 whitespace-pre-wrap rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 font-mono text-sm leading-relaxed text-zinc-200">
+      <div className="mb-6 whitespace-pre-wrap rounded-xl border border-line bg-surface-2 p-5 font-mono text-sm leading-relaxed text-ink">
         {submission.prompt_text}
       </div>
 
@@ -124,7 +124,7 @@ export default async function PromptPage({ params }: Props) {
         <CopyPromptButton text={submission.prompt_text} />
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-lg border border-blue-800 bg-blue-950/30 px-4 py-2 text-sm font-semibold text-blue-200 transition-colors hover:bg-blue-950/60"
+          className="inline-flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent-ink transition hover:brightness-105"
         >
           <Sparkles className="h-4 w-4" />
           Generate your own free
