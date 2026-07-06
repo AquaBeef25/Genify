@@ -13,6 +13,7 @@ import Skeleton from "../components/ui/Skeleton";
 import Switch from "../components/ui/Switch";
 import { Field, Label, Input, Textarea } from "../components/ui/Field";
 import { cn } from "../components/ui/cn";
+import { markdownComponents } from "../components/shared/markdown";
 
 // Mirror of the server's HttpOnly guest cookie, for instant UX (the cookie
 // stays authoritative server-side).
@@ -28,47 +29,6 @@ const FORMAT_LABEL: Record<string, string> = {
   tiktok: "TikTok / Reels",
   youtube: "YouTube",
   commercial: "Cinematic",
-};
-
-// Shared markdown styling so both the default blueprint and the storyboard
-// (which uses h2 headings and horizontal rules between scenes) render cleanly.
-const markdownComponents = {
-  h1: ({ children }: { children?: React.ReactNode }) => (
-    <h1 className="mt-6 mb-3 text-xl font-bold text-ink first:mt-0">{children}</h1>
-  ),
-  h2: ({ children }: { children?: React.ReactNode }) => (
-    <h2 className="mt-6 mb-2.5 flex items-center gap-2.5 text-[15px] font-bold text-ink first:mt-0">
-      <span className="accent-gradient h-4 w-1 shrink-0 rounded-full" />
-      {children}
-    </h2>
-  ),
-  h3: ({ children }: { children?: React.ReactNode }) => (
-    <h3 className="mt-5 mb-2 text-sm font-semibold text-accent-ink first:mt-0">{children}</h3>
-  ),
-  p: ({ children }: { children?: React.ReactNode }) => (
-    <p className="mb-3.5 text-[14.5px] leading-relaxed text-muted">{children}</p>
-  ),
-  strong: ({ children }: { children?: React.ReactNode }) => (
-    <strong className="font-semibold text-ink">{children}</strong>
-  ),
-  ul: ({ children }: { children?: React.ReactNode }) => (
-    <ul className="mb-3.5 space-y-1.5">{children}</ul>
-  ),
-  li: ({ children }: { children?: React.ReactNode }) => (
-    <li className="relative pl-5 text-[14px] leading-relaxed text-muted">
-      <span className="absolute left-0 top-[9px] h-1.5 w-1.5 rounded-full bg-accent" />
-      {children}
-    </li>
-  ),
-  hr: () => <hr className="my-6 border-line" />,
-  pre: ({ children }: { children?: React.ReactNode }) => (
-    <pre className="mb-3.5 overflow-x-auto rounded-lg border border-line border-l-[3px] border-l-accent bg-surface-2 p-4 font-mono text-[13px] leading-relaxed text-ink">
-      {children}
-    </pre>
-  ),
-  code: ({ children }: { children?: React.ReactNode }) => (
-    <code className="font-mono text-[13px] text-accent-ink">{children}</code>
-  ),
 };
 
 function ResultSkeleton() {
