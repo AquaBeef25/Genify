@@ -1,61 +1,59 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
- * Genify design tokens — dark & minimal, single indigo/violet accent.
+ * Genify design tokens — warm & light, single terracotta accent.
  * Semantic color names generate Tailwind utilities (bg-surface,
  * text-muted, border-line, text-accent, …) so screens stop hand-rolling
- * raw zinc values and the accent is retunable from one place.
+ * raw hex values and the accent is retunable from one place.
  * ------------------------------------------------------------------ */
 @theme {
-  --color-canvas: #0a0a0c;
-  --color-surface: #141418;
-  --color-surface-2: #1a1a20;
-  --color-elevated: #212129;
+  --color-canvas: #fef9f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #faf7f2;
+  --color-elevated: #f2ebe3;
 
-  --color-line: #27272e;
-  --color-line-strong: #35353f;
+  --color-line: #e8dfd5;
+  --color-line-strong: #dcd0c4;
 
-  --color-ink: #f5f5f6;
-  --color-muted: #a1a1ab;
-  --color-subtle: #6f6f7a;
-  --color-faint: #4a4a53;
+  --color-ink: #3d3a37;
+  --color-muted: #6b6159;
+  --color-subtle: #9b8f87;
+  --color-faint: #b8aaa0;
 
-  --color-accent: #8b7cf6;
-  --color-accent-2: #6366f1;
-  --color-accent-ink: #c9c1ff;
+  --color-accent: #d97757;
+  --color-accent-2: #c16a4d;
+  --color-accent-ink: #c16a4d;
 
-  --color-success: #34d399;
-  --color-danger: #f87171;
+  --color-success: #3f9d6b;
+  --color-danger: #cc4b37;
 }
 
 /* Fonts come from next/font (variables set on <html>). `inline` maps them
- * onto the font-sans / font-mono utilities. */
+ * onto the font-sans / font-serif / font-mono utilities. */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-cormorant);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  background: var(--color-canvas);
+  background: linear-gradient(135deg, #fef9f3 0%, #f5f0eb 50%, #f0e8e0 100%);
+  background-attachment: fixed;
   color: var(--color-ink);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
 }
 
 /* Reusable gradient for the brand mark / accent surfaces. */
 .accent-gradient {
-  background-image: linear-gradient(
-    140deg,
-    var(--color-accent-2),
-    var(--color-accent)
-  );
+  background-image: linear-gradient(135deg, #d97757, #c16a4d);
 }
 
-/* Soft violet glow used behind heroes. Centered + width-capped so it never
+/* Soft terracotta wash behind heroes. Centered + width-capped so it never
  * spills past the viewport and triggers horizontal scroll. */
 .hero-glow::before {
   content: "";
@@ -67,7 +65,7 @@ body {
   height: 220px;
   background: radial-gradient(
     closest-side,
-    rgba(124, 108, 246, 0.16),
+    rgba(217, 119, 87, 0.12),
     transparent
   );
   pointer-events: none;
