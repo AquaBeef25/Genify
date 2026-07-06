@@ -45,13 +45,15 @@ export default function Leaderboard({
 
   if (top.length === 0) return null;
 
-  const medal = ["text-yellow-400", "text-zinc-300", "text-amber-600"];
+  const medal = ["text-yellow-500", "text-subtle", "text-amber-700"];
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+    <div className="rounded-2xl border border-line bg-surface p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center gap-2">
-        <Trophy className="h-4 w-4 text-yellow-400" />
-        <h2 className="text-sm font-semibold text-white">Top Contributors</h2>
+        <Trophy className="h-4 w-4 text-yellow-500" />
+        <h2 className="font-serif text-base font-semibold text-ink">
+          Top Contributors
+        </h2>
       </div>
 
       <ol className="space-y-3">
@@ -59,7 +61,7 @@ export default function Leaderboard({
           <li key={c.userId} className="flex items-center gap-3">
             <span
               className={`w-5 text-center text-sm font-bold ${
-                medal[i] ?? "text-zinc-600"
+                medal[i] ?? "text-faint"
               }`}
             >
               {i + 1}
@@ -70,21 +72,21 @@ export default function Leaderboard({
                   href={c.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="truncate text-sm font-medium text-zinc-200 hover:text-blue-400"
+                  className="truncate text-sm font-medium text-ink hover:text-accent-ink"
                 >
                   {c.name}
                 </a>
               ) : (
-                <span className="truncate text-sm font-medium text-zinc-200">
+                <span className="truncate text-sm font-medium text-ink">
                   {c.name}
                 </span>
               )}
-              <div className="text-xs text-zinc-500">
+              <div className="text-xs text-subtle">
                 {c.count} {c.count === 1 ? "submission" : "submissions"}
               </div>
             </div>
-            <span className="flex items-center gap-1 text-xs font-medium text-zinc-400">
-              <Heart className="h-3.5 w-3.5 fill-red-400 text-red-400" />
+            <span className="flex items-center gap-1 text-xs font-medium text-muted">
+              <Heart className="h-3.5 w-3.5 fill-danger text-danger" />
               {c.totalLikes}
             </span>
           </li>

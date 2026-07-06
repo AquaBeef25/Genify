@@ -45,20 +45,20 @@ export default function SubmissionModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm sm:items-center"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="my-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl"
+        className="my-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-blue-400">
+            <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-accent-ink">
               {submission.platform}
             </span>
             {submission.model_version && (
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-subtle">
                 {submission.model_version}
               </span>
             )}
@@ -66,13 +66,13 @@ export default function SubmissionModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-zinc-400 transition-colors hover:text-white"
+            className="text-subtle transition-colors hover:text-ink"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Video */}
+        {/* Video (media area stays dark) */}
         <div className="aspect-video w-full bg-black">
           {parsed ? (
             <iframe
@@ -87,7 +87,7 @@ export default function SubmissionModal({
               href={submission.video_url}
               target="_blank"
               rel="noreferrer"
-              className="flex h-full w-full items-center justify-center gap-2 text-sm text-zinc-400 hover:text-white"
+              className="flex h-full w-full items-center justify-center gap-2 text-sm text-white/70 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
               Open video
@@ -99,12 +99,12 @@ export default function SubmissionModal({
         <div className="space-y-4 p-5">
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              <span className="text-xs font-medium uppercase tracking-wider text-subtle">
                 Prompt
               </span>
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700"
+                className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-elevated"
               >
                 {copied ? (
                   <>
@@ -117,14 +117,14 @@ export default function SubmissionModal({
                 )}
               </button>
             </div>
-            <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg bg-zinc-900 p-4 text-sm leading-relaxed text-zinc-200">
+            <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-line bg-surface-2 p-4 text-sm leading-relaxed text-ink">
               {submission.prompt_text}
             </pre>
           </div>
 
           {/* Footer: credit + like */}
-          <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
-            <span className="text-sm text-zinc-400">
+          <div className="flex items-center justify-between border-t border-line pt-4">
+            <span className="text-sm text-muted">
               {submission.submitter_url && submission.submitter_name ? (
                 <>
                   Shared by{" "}
@@ -132,7 +132,7 @@ export default function SubmissionModal({
                     href={submission.submitter_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-medium text-blue-400 hover:underline"
+                    className="font-medium text-accent-ink hover:underline"
                   >
                     {submission.submitter_name}
                   </a>
@@ -140,12 +140,12 @@ export default function SubmissionModal({
               ) : submission.submitter_name ? (
                 <>
                   Shared by{" "}
-                  <span className="font-medium text-zinc-200">
+                  <span className="font-medium text-ink">
                     {submission.submitter_name}
                   </span>
                 </>
               ) : (
-                <span className="text-zinc-600">Shared anonymously</span>
+                <span className="text-faint">Shared anonymously</span>
               )}
             </span>
 
@@ -154,11 +154,11 @@ export default function SubmissionModal({
               aria-label={liked ? "Unlike" : "Like"}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 liked
-                  ? "border-red-900/50 bg-red-950/30 text-red-400"
-                  : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  ? "border-danger/40 bg-danger/10 text-danger"
+                  : "border-line text-muted hover:bg-surface-2 hover:text-ink"
               }`}
             >
-              <Heart className={`h-4 w-4 ${liked ? "fill-red-400" : ""}`} />
+              <Heart className={`h-4 w-4 ${liked ? "fill-danger" : ""}`} />
               {submission.likes_count}
             </button>
           </div>
