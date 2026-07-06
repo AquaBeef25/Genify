@@ -48,17 +48,20 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // The entire app requires login. `/login` is the only public page; static
-  // assets, /api, and metadata files are excluded via `config.matcher` below.
-  const isLoginRoute = request.nextUrl.pathname.startsWith("/login");
-  if (!user && !isLoginRoute) {
+  // The entire app requires login. These auth pages are the only public ones;
+  // static assets, /api, and metadata files are excluded via `config.matcher`.
+  const { pathname } = request.nextUrl;
+  const publicAuthRoutes = ["/login", "/forgot-password", "/reset-password"];
+  const isPublicAuth = publicAuthRoutes.some((r) => pathname.startsWith(r));
+  if (!user && !isPublicAuth) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Already signed in and heading to /login? Send them into the app.
-  if (user && isLoginRoute) {
+  // Already signed in and heading to /login? Send them into the app. (Reset
+  // pages stay reachable while signed in — the recovery link opens a session.)
+  if (user && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
