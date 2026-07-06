@@ -15,16 +15,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   changes by running the app (`npm run dev`) and driving the affected route.
 - **Auth is gated in `proxy.ts`.** Next.js 16 renamed the `middleware` file
   convention to `proxy`. `proxy.ts` (repo root) runs before every route except
-  `/login`: it redirects logged-out visitors to `/login` and persists refreshed
-  Supabase session cookies. Guest generation was removed — `/api/generate` now
-  rejects any request without a session.
-- **Use the design system.** The UI is dark & minimal with a single
-  indigo/violet accent. Semantic color tokens live in `app/globals.css`
-  (`@theme`) and generate utilities (`bg-surface`, `text-muted`, `border-line`,
-  `text-accent`, …); reusable primitives live in `app/components/ui/` (`Button`,
-  `Card`, `Field`, `Badge`, `Spinner`, `Skeleton`, `Switch`). Build UI from
-  these rather than hand-rolling raw `zinc-*` classes. Fonts are Geist via
-  `next/font` in `app/layout.tsx`.
+  the public auth pages (`/login`, `/forgot-password`, `/reset-password`): it
+  redirects logged-out visitors to `/login` and persists refreshed Supabase
+  session cookies. Add any new unauthenticated route (e.g. a future OAuth
+  `/auth/callback`) to the `publicAuthRoutes` allow-list. Guest generation was
+  removed — `/api/generate` now rejects any request without a session.
+- **Use the design system.** The UI is **warm & light with a single terracotta
+  accent** (`#d97757 → #c16a4d`; retheme from dark/indigo landed in the
+  GenifyV3 pass — see `docs/superpowers/specs/2026-07-06-genifyv3-retheme-design.md`).
+  Semantic color tokens live in `app/globals.css` (`@theme`) and generate
+  utilities (`bg-surface`, `text-muted`, `border-line`, `text-accent`, …);
+  reusable primitives live in `app/components/ui/` (`Button`, `Card`, `Field`,
+  `Badge`, `Spinner`, `Skeleton`, `Switch`). Build UI from these rather than
+  hand-rolling raw `zinc-*`/hex classes — the only intentional hard-coded darks
+  are overlays that sit **over video media** (thumbnails, players, modal scrims).
+  Fonts (via `next/font` in `app/layout.tsx`): **Cormorant Garamond** for serif
+  headings (`font-serif` utility), **Inter** for body/UI (`font-sans`), **Geist
+  Mono** for code. Blueprint markdown styling is shared via
+  `app/components/shared/markdown.tsx` (used by the generator result and the
+  history View modal).
 - **Env var naming is non-standard.** The Supabase anon key is read as
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (not the conventional `..._ANON_KEY`),
   and `route.ts` falls back to a misspelled `GEMENI_API_KEY`. Match existing
@@ -65,8 +74,12 @@ dashboard.
 
 ## How It Works (End-to-End)
 
-1. **Auth** — A user signs up / signs in on `/login` using Supabase email +
-   password auth.
+1. **Auth** — A user signs up / signs in on `/login` (two-column layout,
+   Supabase email + password). Forgotten passwords go through
+   `/forgot-password` → emailed link → `/reset-password`. The login page also
+   shows Google/GitHub buttons, but **OAuth is not wired yet** (placeholder
+   "coming soon" — it needs Supabase provider config + an `/auth/callback`
+   route).
 2. **Generate** — On the dashboard (`/`), the user enters a *Core Idea* and
    picks a *Target Format* (TikTok/Reels, YouTube, or Cinematic Commercial),
    then hits **Generate Prompt**.
@@ -91,7 +104,9 @@ app/
 ├── globals.css                    # Tailwind + global styles
 │
 ├── (auth)/
-│   └── login/page.tsx             # Sign in / Sign up (Supabase auth)
+│   ├── login/page.tsx             # Two-column sign in / sign up (Supabase auth)
+│   ├── forgot-password/page.tsx   # Request a password-reset email
+│   └── reset-password/page.tsx    # Set a new password (from the emailed link)
 │
 ├── (dashboard)/
 │   ├── layout.tsx                 # Sidebar + main content shell
@@ -116,7 +131,9 @@ app/
     ├── ui/                        # Design-system primitives: Button, Card, Field,
     │                              #   Badge, Spinner, Skeleton, Switch, cn
     └── shared/
-        ├── PromptCard.tsx         # History card: format badge, preview, delete
+        ├── PromptCard.tsx         # History card: colored format badge, preview,
+        │                          #   View (modal) / Share / Delete actions
+        ├── markdown.tsx           # Shared react-markdown component styling
         └── SignupWall.tsx         # Guest signup CTA
 ```
 
@@ -169,12 +186,18 @@ custom `react-markdown` components, and offers copy-to-clipboard.
 ### `app/(dashboard)/history/page.tsx` — History ("My Prompts")
 Client component that fetches the current user, then queries the `prompts`
 table filtered by `user_id` and ordered by `created_at` descending. Renders a
-responsive grid of cards showing the format badge, date, original idea, and
-generated output. Redirects to `/login` if unauthenticated.
+responsive grid of `PromptCard`s (colored per-format badge, date, idea, preview,
+and **View** / **Share** / **Delete** actions — View opens a modal with the full
+blueprint). Search + format filter run client-side. Redirects to `/login` if
+unauthenticated.
 
 ### `app/(auth)/login/page.tsx` — Auth
-Email/password form with **Sign In** (`signInWithPassword` → redirect to `/`)
-and **Sign Up** (`signUp` → prompt to confirm via email).
+Two-column layout: a branding panel (desktop only) + the form. **Sign In**
+(`signInWithPassword` → redirect to `/`) and **Create one** (`signUp` → confirm
+via email), a **Forgot password?** link to `/forgot-password`, and Google/GitHub
+buttons that are currently placeholders (`handleSocialSoon` shows a notice —
+real OAuth pending). `lucide-react` in this build has **no brand icons**, so the
+Google/GitHub marks are inline SVGs.
 
 ### `app/components/layout/sidebar.tsx` — Navigation
 Left sidebar grouped into **Create** (Discover, My Prompts) and **Community**
