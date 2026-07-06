@@ -69,7 +69,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <Brand />
-          <h1 className="mt-6 text-2xl font-bold tracking-tight text-ink">
+          <h1 className="mt-6 font-serif text-3xl font-bold tracking-tight text-ink">
             Welcome to Genify
           </h1>
           <p className="mt-2 max-w-sm text-sm text-muted">

@@ -46,7 +46,7 @@ const markdownComponents = {
     <h3 className="mt-5 mb-2 text-sm font-semibold text-accent-ink first:mt-0">{children}</h3>
   ),
   p: ({ children }: { children?: React.ReactNode }) => (
-    <p className="mb-3.5 text-[14.5px] leading-relaxed text-zinc-300">{children}</p>
+    <p className="mb-3.5 text-[14.5px] leading-relaxed text-muted">{children}</p>
   ),
   strong: ({ children }: { children?: React.ReactNode }) => (
     <strong className="font-semibold text-ink">{children}</strong>
@@ -55,19 +55,19 @@ const markdownComponents = {
     <ul className="mb-3.5 space-y-1.5">{children}</ul>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
-    <li className="relative pl-5 text-[14px] leading-relaxed text-zinc-300">
+    <li className="relative pl-5 text-[14px] leading-relaxed text-muted">
       <span className="absolute left-0 top-[9px] h-1.5 w-1.5 rounded-full bg-accent" />
       {children}
     </li>
   ),
   hr: () => <hr className="my-6 border-line" />,
   pre: ({ children }: { children?: React.ReactNode }) => (
-    <pre className="mb-3.5 overflow-x-auto rounded-lg border border-line border-l-[3px] border-l-accent bg-canvas p-4 font-mono text-[13px] leading-relaxed text-[#d6d3ff]">
+    <pre className="mb-3.5 overflow-x-auto rounded-lg border border-line border-l-[3px] border-l-accent bg-surface-2 p-4 font-mono text-[13px] leading-relaxed text-ink">
       {children}
     </pre>
   ),
   code: ({ children }: { children?: React.ReactNode }) => (
-    <code className="font-mono text-[13px] text-[#d6d3ff]">{children}</code>
+    <code className="font-mono text-[13px] text-accent-ink">{children}</code>
   ),
 };
 
@@ -210,7 +210,7 @@ export default function DashboardPage() {
             <Sparkles className="h-3.5 w-3.5 text-accent" />
             Generator
           </span>
-          <h1 className="relative z-[1] max-w-[20ch] text-3xl font-bold tracking-tight text-balance text-ink">
+          <h1 className="relative z-[1] max-w-[20ch] font-serif text-4xl font-bold tracking-tight text-balance text-ink">
             Turn an idea into a shot-ready prompt.
           </h1>
           <p className="relative z-[1] mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted">

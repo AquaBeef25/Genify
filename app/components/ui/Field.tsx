@@ -2,7 +2,7 @@ import { cn } from './cn';
 
 // Shared form primitives so inputs look identical everywhere.
 const controlBase =
-  'w-full rounded-lg border border-line bg-canvas px-3.5 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/15';
+  'w-full rounded-lg border border-line bg-surface-2 px-3.5 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:outline-none focus:border-accent focus:bg-surface focus:ring-2 focus:ring-accent/15';
 
 export function Label({
   className,

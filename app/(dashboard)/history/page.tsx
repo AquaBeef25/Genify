@@ -112,7 +112,7 @@ export default function HistoryPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">My Prompts</h1>
+        <h1 className="font-serif text-3xl font-bold tracking-tight text-ink">My Prompts</h1>
         <p className="mt-1 text-sm text-muted">
           Your entire history of generated AI blueprints.
         </p>
@@ -173,7 +173,7 @@ export default function HistoryPage() {
           </div>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-zinc-200"
+            className="accent-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105"
           >
             <Sparkles className="h-4 w-4" />
             Create a prompt
