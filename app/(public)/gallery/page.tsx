@@ -147,14 +147,16 @@ export default function GalleryPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Community Gallery</h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <h1 className="font-serif text-3xl font-bold tracking-tight text-ink">
+          Community Gallery
+        </h1>
+        <p className="mt-1 text-sm text-muted">
           Real results from Genify prompts — grab a prompt and make your own.
         </p>
       </div>
 
       {showSubmittedBanner && (
-        <div className="mb-6 rounded-lg border border-blue-900/50 bg-blue-950/30 px-4 py-3 text-sm text-blue-200">
+        <div className="mb-6 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent-ink">
           Thanks for sharing! Your submission is pending review and will appear
           here once approved.
         </div>
@@ -172,8 +174,8 @@ export default function GalleryPage() {
                   onClick={() => setPlatformFilter(p)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     platformFilter === p
-                      ? "bg-white text-black"
-                      : "border border-zinc-800 text-zinc-400 hover:text-white"
+                      ? "accent-gradient text-white"
+                      : "border border-line text-muted hover:border-line-strong hover:text-ink"
                   }`}
                 >
                   {p === "all" ? "All" : p}
@@ -181,13 +183,13 @@ export default function GalleryPage() {
               ))}
             </div>
 
-            <div className="flex shrink-0 gap-1 rounded-lg border border-zinc-800 p-1">
+            <div className="flex shrink-0 gap-1 rounded-lg border border-line p-1">
               <button
                 onClick={() => setSortBy("recent")}
                 className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                   sortBy === "recent"
-                    ? "bg-zinc-800 text-white"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-accent/10 text-accent-ink"
+                    : "text-muted hover:text-ink"
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" /> Recent
@@ -196,8 +198,8 @@ export default function GalleryPage() {
                 onClick={() => setSortBy("likes")}
                 className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                   sortBy === "likes"
-                    ? "bg-zinc-800 text-white"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-accent/10 text-accent-ink"
+                    : "text-muted hover:text-ink"
                 }`}
               >
                 <Flame className="h-3.5 w-3.5" /> Most liked
@@ -207,20 +209,20 @@ export default function GalleryPage() {
 
           {/* Grid */}
           {loading ? (
-            <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
+            <div className="flex h-64 items-center justify-center text-sm text-subtle">
               Loading the gallery...
             </div>
           ) : error ? (
-            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-red-900/50 bg-red-950/10 text-sm text-red-400">
+            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-danger/40 bg-danger/5 text-sm text-danger">
               {error}
             </div>
           ) : submissions.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 text-center text-sm text-zinc-500">
+            <div className="flex h-64 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line bg-surface-2 text-center text-sm text-subtle">
               <span>No approved submissions yet.</span>
-              <span className="text-zinc-600">Be the first to share a result!</span>
+              <span className="text-faint">Be the first to share a result!</span>
             </div>
           ) : visible.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 text-sm text-zinc-500">
+            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-line bg-surface-2 text-sm text-subtle">
               No submissions for this platform yet.
             </div>
           ) : (

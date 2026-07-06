@@ -99,30 +99,30 @@ export default function SubmitPage() {
 
   if (checkingAuth) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-500">
+      <div className="flex h-screen items-center justify-center text-sm text-subtle">
         Loading...
       </div>
     );
   }
 
   const inputClass =
-    "w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow";
+    "w-full bg-surface-2 border border-line rounded-lg p-3 text-ink placeholder:text-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition";
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6 md:p-10 text-white">
+    <div className="min-h-screen p-6 text-ink md:p-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Share a Result</h1>
-        <p className="text-sm text-zinc-400">
+        <h1 className="font-serif text-3xl font-bold tracking-tight">Share a Result</h1>
+        <p className="text-sm text-muted">
           Got a great video from a Genify prompt? Share the link and it&apos;ll
           appear in the community gallery once approved.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-6 max-w-2xl">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm space-y-4">
+        <div className="space-y-4 rounded-xl border border-line bg-surface p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           {/* Video link */}
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">
+            <label className="mb-1 block text-sm font-medium text-muted">
               Video link
             </label>
             <input
@@ -134,16 +134,16 @@ export default function SubmitPage() {
             />
             <div className="mt-1.5 flex items-center gap-1.5 text-xs">
               {!urlTouched ? (
-                <span className="text-zinc-500">
+                <span className="text-subtle">
                   Paste an unlisted YouTube or Vimeo link — we never host files.
                 </span>
               ) : parsedVideo ? (
-                <span className="flex items-center gap-1.5 text-green-400">
+                <span className="flex items-center gap-1.5 text-success">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Looks good — {parsedVideo.provider} link detected.
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5 text-red-400">
+                <span className="flex items-center gap-1.5 text-danger">
                   <XCircle className="h-3.5 w-3.5" />
                   Only YouTube and Vimeo links are supported.
                 </span>
@@ -154,7 +154,7 @@ export default function SubmitPage() {
           {/* Platform + model */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="mb-1 block text-sm font-medium text-muted">
                 Platform used
               </label>
               <select
@@ -170,9 +170,9 @@ export default function SubmitPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="mb-1 block text-sm font-medium text-muted">
                 Model version{" "}
-                <span className="text-zinc-600">(optional)</span>
+                <span className="text-faint">(optional)</span>
               </label>
               <input
                 className={inputClass}
@@ -185,7 +185,7 @@ export default function SubmitPage() {
 
           {/* Prompt */}
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">
+            <label className="mb-1 block text-sm font-medium text-muted">
               Prompt used
             </label>
             <textarea
@@ -196,7 +196,7 @@ export default function SubmitPage() {
               onChange={(e) => setPromptText(e.target.value)}
             />
             {promptId && (
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-subtle">
                 Prefilled from your generation history — edit it to match what
                 you actually used.
               </p>
@@ -205,13 +205,13 @@ export default function SubmitPage() {
         </div>
 
         {/* Credit */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm space-y-4">
-          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+        <div className="space-y-4 rounded-xl border border-line bg-surface p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="text-xs font-medium uppercase tracking-wider text-subtle">
             How to credit you
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="mb-1 block text-sm font-medium text-muted">
                 Display name
               </label>
               <input
@@ -222,8 +222,8 @@ export default function SubmitPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
-                Link <span className="text-zinc-600">(optional)</span>
+              <label className="mb-1 block text-sm font-medium text-muted">
+                Link <span className="text-faint">(optional)</span>
               </label>
               <input
                 className={inputClass}
@@ -237,7 +237,7 @@ export default function SubmitPage() {
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-800 bg-red-900/40 p-3 text-sm text-red-300">
+          <div className="rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -246,11 +246,11 @@ export default function SubmitPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="accent-gradient rounded-lg px-6 py-3 font-semibold text-white transition hover:brightness-105 disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit for review"}
           </button>
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-subtle">
             Submissions are reviewed before appearing publicly.
           </span>
         </div>

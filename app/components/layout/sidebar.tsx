@@ -66,7 +66,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const initial = email ? email[0]!.toUpperCase() : 'G';
 
   return (
-    <aside className="flex h-screen w-64 flex-col gap-2 border-r border-line bg-canvas p-4">
+    <aside className="flex h-screen w-[280px] flex-col gap-2 border-r border-line bg-surface-2 p-4">
       <Brand className="px-2 pb-4 pt-2" />
 
       <nav className="flex-1 space-y-6 overflow-y-auto">
@@ -87,7 +87,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     className={cn(
                       'flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium transition-all',
                       isActive
-                        ? 'border-accent/30 bg-accent/10 text-white'
+                        ? 'border-accent/30 bg-accent/10 text-ink'
                         : 'text-muted hover:bg-surface hover:text-ink'
                     )}
                   >

@@ -25,7 +25,7 @@ export default function SignupWall({
         <div className="flex-1">
           <h3 className="text-lg font-bold text-ink">{title}</h3>
           <p className="mt-1 text-sm text-muted">{subtitle}</p>
-          <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+          <ul className="mt-4 space-y-2 text-sm text-muted">
             {PERKS.map((perk) => (
               <li key={perk} className="flex items-center gap-2.5">
                 <Check className="h-4 w-4 shrink-0 text-accent" />

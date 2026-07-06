@@ -8,16 +8,16 @@ const base =
   'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed';
 
 const variants: Record<Variant, string> = {
-  // White is the primary action color (dark & minimal).
+  // Terracotta gradient is the primary action color (warm & light).
   primary:
-    'bg-white text-black hover:bg-zinc-200 disabled:bg-elevated disabled:text-subtle',
-  // Indigo→violet accent for secondary emphasis (refine, etc.).
+    'accent-gradient text-white shadow-sm hover:brightness-105 disabled:opacity-50 disabled:hover:brightness-100',
+  // Same gradient for secondary-emphasis actions (refine, etc.).
   accent:
-    'accent-gradient text-white hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100',
+    'accent-gradient text-white hover:brightness-105 disabled:opacity-50 disabled:hover:brightness-100',
   secondary:
-    'border border-line-strong bg-transparent text-ink hover:bg-surface disabled:opacity-50',
+    'border border-line bg-transparent text-muted hover:border-line-strong hover:bg-surface-2 hover:text-ink disabled:opacity-50',
   ghost:
-    'border border-line bg-elevated text-ink hover:bg-surface-2 disabled:opacity-50',
+    'border border-line bg-transparent text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-50',
 };
 
 const sizes: Record<Size, string> = {

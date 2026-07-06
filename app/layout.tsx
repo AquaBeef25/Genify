@@ -1,12 +1,19 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Cormorant_Garamond, Inter, Geist_Mono } from 'next/font/google';
 
-// Self-hosted via next/font — previously the app fell back to Arial because no
-// font was loaded and globals.css hard-coded an Arial stack.
-const geistSans = Geist({
+// Self-hosted via next/font. Inter (variable) drives body/UI text; Cormorant
+// Garamond (needs explicit weights — not a variable font) drives serif
+// headings; Geist Mono stays for code blocks in generated prompts.
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-geist-sans',
+  variable: '--font-inter',
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant',
 });
 
 const geistMono = Geist_Mono({
@@ -28,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${inter.variable} ${cormorant.variable} ${geistMono.variable}`}
     >
       <body className="min-h-full antialiased">{children}</body>
     </html>
