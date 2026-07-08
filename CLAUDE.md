@@ -15,11 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   changes by running the app (`npm run dev`) and driving the affected route.
 - **Auth is gated in `proxy.ts`.** Next.js 16 renamed the `middleware` file
   convention to `proxy`. `proxy.ts` (repo root) runs before every route except
-  the public auth pages (`/login`, `/forgot-password`, `/reset-password`): it
-  redirects logged-out visitors to `/login` and persists refreshed Supabase
-  session cookies. Add any new unauthenticated route (e.g. a future OAuth
-  `/auth/callback`) to the `publicAuthRoutes` allow-list. Guest generation was
-  removed — `/api/generate` now rejects any request without a session.
+  the public auth pages (`/login`, `/forgot-password`, `/reset-password`,
+  `/auth/callback`): it redirects logged-out visitors to `/login` and persists
+  refreshed Supabase session cookies. Add any new unauthenticated route to the
+  `publicAuthRoutes` allow-list — `/auth/callback` was added there for Google
+  OAuth. Guest generation was removed — `/api/generate` now rejects any request
+  without a session.
 - **Use the design system.** The UI is **warm & light with a single terracotta
   accent** (`#d97757 → #c16a4d`; retheme from dark/indigo landed in the
   GenifyV3 pass — see `docs/superpowers/specs/2026-07-06-genifyv3-retheme-design.md`).
@@ -77,9 +78,9 @@ dashboard.
 1. **Auth** — A user signs up / signs in on `/login` (two-column layout,
    Supabase email + password). Forgotten passwords go through
    `/forgot-password` → emailed link → `/reset-password`. The login page also
-   offers **Google sign-in** (`signInWithOAuth` → `/auth/callback`, added to
-   `proxy.ts`'s `publicAuthRoutes`) — **live**. GitHub remains a placeholder
-   ("coming soon").
+   offers **live Google sign-in** (`signInWithOAuth` → `/auth/callback`, added
+   to `proxy.ts`'s `publicAuthRoutes`); GitHub remains a placeholder ("coming
+   soon").
 2. **Generate** — On the dashboard (`/`), the user enters a *Core Idea* and
    picks a *Target Format* (TikTok/Reels, YouTube, or Cinematic Commercial),
    then hits **Generate Prompt**.
