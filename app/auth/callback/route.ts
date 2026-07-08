@@ -30,6 +30,7 @@ export async function GET(request: Request) {
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error('[auth/callback] code exchange failed:', error.message);
   }
 
   // No code, or the exchange failed → back to login with an error flag.

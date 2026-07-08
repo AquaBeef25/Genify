@@ -84,7 +84,7 @@ export default function LoginPage() {
   // buttons honest until then.
   const handleSocialSoon = () => {
     setError(null);
-    setNotice('Social sign-in is coming soon — email & password work today.');
+    setNotice('GitHub sign-in is coming soon — Google, email & password work today.');
   };
 
   return (
