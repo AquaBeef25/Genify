@@ -77,9 +77,9 @@ dashboard.
 1. **Auth** — A user signs up / signs in on `/login` (two-column layout,
    Supabase email + password). Forgotten passwords go through
    `/forgot-password` → emailed link → `/reset-password`. The login page also
-   shows Google/GitHub buttons, but **OAuth is not wired yet** (placeholder
-   "coming soon" — it needs Supabase provider config + an `/auth/callback`
-   route).
+   offers **Google sign-in** (`signInWithOAuth` → `/auth/callback`, added to
+   `proxy.ts`'s `publicAuthRoutes`) — **live**. GitHub remains a placeholder
+   ("coming soon").
 2. **Generate** — On the dashboard (`/`), the user enters a *Core Idea* and
    picks a *Target Format* (TikTok/Reels, YouTube, or Cinematic Commercial),
    then hits **Generate Prompt**.
@@ -194,10 +194,12 @@ unauthenticated.
 ### `app/(auth)/login/page.tsx` — Auth
 Two-column layout: a branding panel (desktop only) + the form. **Sign In**
 (`signInWithPassword` → redirect to `/`) and **Create one** (`signUp` → confirm
-via email), a **Forgot password?** link to `/forgot-password`, and Google/GitHub
-buttons that are currently placeholders (`handleSocialSoon` shows a notice —
-real OAuth pending). `lucide-react` in this build has **no brand icons**, so the
-Google/GitHub marks are inline SVGs.
+via email), a **Forgot password?** link to `/forgot-password`, a working
+**Google** button (`handleGoogleSignIn` → `supabase.auth.signInWithOAuth`,
+redirecting through `app/auth/callback/route.ts`), and a **GitHub** button
+that's still a placeholder (`handleSocialSoon` shows a notice). `lucide-react`
+in this build has **no brand icons**, so the Google/GitHub marks are inline
+SVGs.
 
 ### `app/components/layout/sidebar.tsx` — Navigation
 Left sidebar grouped into **Create** (Discover, My Prompts) and **Community**
