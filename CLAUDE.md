@@ -15,11 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   changes by running the app (`npm run dev`) and driving the affected route.
 - **Auth is gated in `proxy.ts`.** Next.js 16 renamed the `middleware` file
   convention to `proxy`. `proxy.ts` (repo root) runs before every route except
-  the public auth pages (`/login`, `/forgot-password`, `/reset-password`): it
-  redirects logged-out visitors to `/login` and persists refreshed Supabase
-  session cookies. Add any new unauthenticated route (e.g. a future OAuth
-  `/auth/callback`) to the `publicAuthRoutes` allow-list. Guest generation was
-  removed — `/api/generate` now rejects any request without a session.
+  the public auth pages (`/login`, `/forgot-password`, `/reset-password`,
+  `/auth/callback`): it redirects logged-out visitors to `/login` and persists
+  refreshed Supabase session cookies. Add any new unauthenticated route to the
+  `publicAuthRoutes` allow-list — `/auth/callback` was added there for Google
+  OAuth. Guest generation was removed — `/api/generate` now rejects any request
+  without a session.
 - **Use the design system.** The UI is **warm & light with a single terracotta
   accent** (`#d97757 → #c16a4d`; retheme from dark/indigo landed in the
   GenifyV3 pass — see `docs/superpowers/specs/2026-07-06-genifyv3-retheme-design.md`).
@@ -77,9 +78,9 @@ dashboard.
 1. **Auth** — A user signs up / signs in on `/login` (two-column layout,
    Supabase email + password). Forgotten passwords go through
    `/forgot-password` → emailed link → `/reset-password`. The login page also
-   shows Google/GitHub buttons, but **OAuth is not wired yet** (placeholder
-   "coming soon" — it needs Supabase provider config + an `/auth/callback`
-   route).
+   offers **live Google sign-in** (`signInWithOAuth` → `/auth/callback`, added
+   to `proxy.ts`'s `publicAuthRoutes`); GitHub remains a placeholder ("coming
+   soon").
 2. **Generate** — On the dashboard (`/`), the user enters a *Core Idea* and
    picks a *Target Format* (TikTok/Reels, YouTube, or Cinematic Commercial),
    then hits **Generate Prompt**.
@@ -194,10 +195,12 @@ unauthenticated.
 ### `app/(auth)/login/page.tsx` — Auth
 Two-column layout: a branding panel (desktop only) + the form. **Sign In**
 (`signInWithPassword` → redirect to `/`) and **Create one** (`signUp` → confirm
-via email), a **Forgot password?** link to `/forgot-password`, and Google/GitHub
-buttons that are currently placeholders (`handleSocialSoon` shows a notice —
-real OAuth pending). `lucide-react` in this build has **no brand icons**, so the
-Google/GitHub marks are inline SVGs.
+via email), a **Forgot password?** link to `/forgot-password`, a working
+**Google** button (`handleGoogleSignIn` → `supabase.auth.signInWithOAuth`,
+redirecting through `app/auth/callback/route.ts`), and a **GitHub** button
+that's still a placeholder (`handleSocialSoon` shows a notice). `lucide-react`
+in this build has **no brand icons**, so the Google/GitHub marks are inline
+SVGs.
 
 ### `app/components/layout/sidebar.tsx` — Navigation
 Left sidebar grouped into **Create** (Discover, My Prompts) and **Community**

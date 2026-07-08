@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../lib/supabase';
@@ -17,6 +17,20 @@ export default function LoginPage() {
 
   // Initialize our secure database client
   const supabase = createClient();
+
+  // The OAuth callback redirects here as /login?authError=1 when the code
+  // exchange (or the flow start) failed. Surface it in the existing notice.
+  // This is a one-shot, client-only read on mount — the query param isn't known
+  // during SSR, so an effect is the hydration-safe place to set it. The
+  // set-state-in-effect rule's cascading-render concern doesn't apply to a
+  // single mount-time read; scoped disable (the repo uses scoped disables for
+  // legitimate react-hooks cases, e.g. sidebar.tsx).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('authError')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError('Google sign-in failed — please try again, or use email & password.');
+    }
+  }, []);
 
   const handleSignUp = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -54,11 +68,23 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setNotice(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    // On success the browser is already navigating to Google; we only reach
+    // here if the flow failed to *start*.
+    if (error) setError(error.message);
+  };
+
   // OAuth is wired in a later step and needs Supabase provider config; keep the
   // buttons honest until then.
   const handleSocialSoon = () => {
     setError(null);
-    setNotice('Social sign-in is coming soon — email & password work today.');
+    setNotice('GitHub sign-in is coming soon — Google, email & password work today.');
   };
 
   return (
@@ -178,7 +204,7 @@ export default function LoginPage() {
 
           {/* Social */}
           <div className="grid grid-cols-2 gap-3">
-            <Button type="button" variant="secondary" onClick={handleSocialSoon}>
+            <Button type="button" variant="secondary" onClick={handleGoogleSignIn}>
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                 <path
                   fill="currentColor"

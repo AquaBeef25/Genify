@@ -155,9 +155,12 @@ Not blockers — surfaced by Supabase's security advisors. Do them when convenie
   invocation may hit a fresh instance, so the 3-req/60s cap rarely triggers. For
   real throttling, move to a shared store (e.g. Upstash Redis). Track as a
   follow-up.
-- **OAuth buttons are placeholders.** Google/GitHub on `/login` show a "coming
-  soon" notice — they need Supabase provider config + an `/auth/callback` route.
-  Email + password work today.
+- **Google sign-in is live; GitHub is still a placeholder.** Google on
+  `/login` uses `signInWithOAuth` → `/auth/callback` and requires the Google
+  provider to be enabled in the Supabase dashboard (Google Cloud OAuth
+  client — no new app/Vercel env var needed) with the production origin
+  included in Supabase's **Redirect URLs**. GitHub still shows a "coming
+  soon" notice. Email + password work today.
 
 ---
 
