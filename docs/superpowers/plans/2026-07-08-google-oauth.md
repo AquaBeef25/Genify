@@ -23,7 +23,7 @@
 | File | Change | Responsibility |
 | --- | --- | --- |
 | *(Google Cloud + Supabase dashboards)* | manual | Enable the Google provider with an OAuth client ID/secret |
-| `app/lib/supabase-server.ts` | **create** | Cookie-writing server Supabase client (`next/headers`) for Route Handlers |
+| `app/lib/supabase-server.ts` | **modify** | Add a session-aware, cookie-writing server client (`next/headers`) alongside the existing `createPublicServerClient` |
 | `app/auth/callback/route.ts` | **create** | GET handler: exchange OAuth `code` → session → redirect into app |
 | `proxy.ts` | modify | Add `/auth/callback` to `publicAuthRoutes` |
 | `app/(auth)/login/page.tsx` | modify | Wire Google button → `signInWithOAuth`; surface `?authError=1` |
@@ -67,29 +67,50 @@ The Google provider row in Supabase shows **Enabled**. No app code or env change
 
 ---
 
-### Task 2: Server Supabase client helper
+### Task 2: Add a session-aware server Supabase client
+
+> **Correction (reality check):** `app/lib/supabase-server.ts` **already exists**
+> (shipped with the SEO prompt-library work). It exports
+> `createPublicServerClient` — an anonymous, read-only `@supabase/supabase-js`
+> client used by `app/lib/library.ts` for the public library/sitemap/robots
+> pages. **Do not overwrite it.** This task ADDS a second, session-aware export
+> to the same file under a non-colliding name.
 
 **Files:**
-- Create: `app/lib/supabase-server.ts`
+- Modify: `app/lib/supabase-server.ts` (add imports + one new export; leave `createPublicServerClient` untouched)
 
 **Interfaces:**
-- Produces: `async function createClient(): Promise<SupabaseClient>` — a request-scoped server client that reads/writes auth cookies via `next/headers`. Consumed by Task 3.
+- Produces: `async function createRouteHandlerClient(): Promise<SupabaseClient>` — a request-scoped, cookie-writing server client (via `@supabase/ssr` + `next/headers`) that can persist the session from `exchangeCodeForSession()`. Consumed by Task 3.
+- Preserves: `createPublicServerClient()` (existing) — unchanged.
 
-- [ ] **Step 1: Create the server client helper**
+- [ ] **Step 1: Extend the file**
 
-Create `app/lib/supabase-server.ts`:
+The resulting `app/lib/supabase-server.ts` must read exactly as follows (the
+first import + `createPublicServerClient` are the existing content, unchanged;
+everything else is new):
 
 ```ts
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// Server-side Supabase client for Route Handlers / Server Components.
-// Mirrors the cookie handling in proxy.ts, but reads cookies from next/headers
-// (request-scoped) instead of a NextRequest. The OAuth callback route needs a
-// cookie-WRITING server client so the session from exchangeCodeForSession()
-// is persisted. Env names are intentionally non-standard (PUBLISHABLE, not
-// ANON) — see CLAUDE.md.
-export async function createClient() {
+// Anonymous, read-only Supabase client for Server Components and metadata
+// routes (sitemap/robots). No user session is involved — it only ever reads
+// rows RLS exposes publicly (submissions where status = 'approved').
+export function createPublicServerClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+}
+
+// Request-scoped, session-aware server client backed by the request cookies
+// (via next/headers). Reads AND writes auth cookies, so it can persist the
+// session that exchangeCodeForSession() returns in the OAuth callback route.
+// Mirrors the cookie handling in proxy.ts. Env names are intentionally
+// non-standard (PUBLISHABLE, not ANON) — see CLAUDE.md.
+export async function createRouteHandlerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -117,6 +138,10 @@ export async function createClient() {
 }
 ```
 
+> Note: `createClient` (from `@supabase/supabase-js`) and `createServerClient`
+> (from `@supabase/ssr`) are distinct names, so both imports coexist without
+> collision.
+
 - [ ] **Step 2: Lint**
 
 Run: `npm run lint`
@@ -126,7 +151,7 @@ Expected: no new errors/warnings.
 
 ```bash
 git add app/lib/supabase-server.ts
-git commit -m "feat(auth): add cookie-writing server Supabase client helper"
+git commit -m "feat(auth): add session-aware server Supabase client for OAuth callback"
 ```
 
 ---
@@ -137,7 +162,7 @@ git commit -m "feat(auth): add cookie-writing server Supabase client helper"
 - Create: `app/auth/callback/route.ts`
 
 **Interfaces:**
-- Consumes: `createClient` from `../../lib/supabase-server` (Task 2).
+- Consumes: `createRouteHandlerClient` from `../../lib/supabase-server` (Task 2).
 - Produces: a `GET` handler at path `/auth/callback` that redirects to `/` (or a relative `?next=`) on success, or `/login?authError=1` on failure.
 
 - [ ] **Step 1: Create the callback route**
@@ -146,7 +171,7 @@ Create `app/auth/callback/route.ts`:
 
 ```ts
 import { NextResponse } from 'next/server';
-import { createClient } from '../../lib/supabase-server';
+import { createRouteHandlerClient } from '../../lib/supabase-server';
 
 // OAuth (PKCE) callback. Supabase redirects here with ?code=... after the user
 // authorizes with Google. We exchange the code for a session (writing the auth
@@ -164,7 +189,7 @@ export async function GET(request: Request) {
   if (!next.startsWith('/')) next = '/';
 
   if (code) {
-    const supabase = await createClient();
+    const supabase = await createRouteHandlerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       // Behind Vercel's proxy the user-facing host is in x-forwarded-host.
@@ -289,8 +314,14 @@ In the component body, immediately after the existing `const supabase = createCl
 ```ts
   // The OAuth callback redirects here as /login?authError=1 when the code
   // exchange (or the flow start) failed. Surface it in the existing notice.
+  // This is a one-shot, client-only read on mount — the query param isn't known
+  // during SSR, so an effect is the hydration-safe place to set it. The
+  // set-state-in-effect rule's cascading-render concern doesn't apply to a
+  // single mount-time read; scoped disable (the repo uses scoped disables for
+  // legitimate react-hooks cases, e.g. sidebar.tsx).
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('authError')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError('Google sign-in failed — please try again, or use email & password.');
     }
   }, []);
