@@ -51,7 +51,14 @@ export async function proxy(request: NextRequest) {
   // The entire app requires login. These auth pages are the only public ones;
   // static assets, /api, and metadata files are excluded via `config.matcher`.
   const { pathname } = request.nextUrl;
-  const publicAuthRoutes = ["/login", "/forgot-password", "/reset-password"];
+  // /auth/callback must be public: mid-OAuth the user has no session yet, so
+  // proxy would otherwise redirect it to /login before the code is exchanged.
+  const publicAuthRoutes = [
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/auth/callback",
+  ];
   const isPublicAuth = publicAuthRoutes.some((r) => pathname.startsWith(r));
   if (!user && !isPublicAuth) {
     const url = request.nextUrl.clone();
