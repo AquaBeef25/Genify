@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Trash2, Share2, Eye, X } from "lucide-react";
+import { Trash2, Share2, Eye, X, Star } from "lucide-react";
 import { Card } from "../ui/Card";
 import { cn } from "../ui/cn";
 import { markdownComponents } from "./markdown";
@@ -14,6 +14,7 @@ export type Prompt = {
   core_idea: string;
   generated_result: string;
   created_at: string;
+  is_favorite: boolean;
 };
 
 const FORMAT_LABEL: Record<string, string> = {
@@ -46,9 +47,11 @@ function toPreview(markdown: string): string {
 export default function PromptCard({
   prompt,
   onDelete,
+  onToggleFavorite,
 }: {
   prompt: Prompt;
   onDelete: (id: string) => void | Promise<void>;
+  onToggleFavorite: (id: string, next: boolean) => void | Promise<void>;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [open, setOpen] = useState(false);
@@ -120,6 +123,19 @@ export default function PromptCard({
           >
             <Share2 className="h-3.5 w-3.5" /> Share
           </Link>
+          <button
+            onClick={() => onToggleFavorite(prompt.id, !prompt.is_favorite)}
+            aria-label={prompt.is_favorite ? "Remove from favorites" : "Add to favorites"}
+            title={prompt.is_favorite ? "Remove from favorites" : "Add to favorites"}
+            className={cn(
+              "grid w-10 place-items-center rounded-lg border transition-colors",
+              prompt.is_favorite
+                ? "border-accent/30 bg-accent/10 text-accent"
+                : "border-line text-subtle hover:border-line-strong hover:text-ink"
+            )}
+          >
+            <Star className={cn("h-4 w-4", prompt.is_favorite && "fill-accent")} />
+          </button>
           <button
             onClick={handleDelete}
             disabled={deleting}

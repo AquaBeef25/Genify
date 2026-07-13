@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Sparkles } from 'lucide-react';
+import { Search, Sparkles, Star } from 'lucide-react';
 import { createClient } from '../../lib/supabase';
 import PromptCard, { type Prompt } from '../../components/shared/PromptCard';
 import { Card } from '../../components/ui/Card';
@@ -38,6 +38,7 @@ export default function HistoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [formatFilter, setFormatFilter] = useState('all');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -96,18 +97,48 @@ export default function HistoryPage() {
     setPrompts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Client-side search + format filter over the already-fetched rows.
+  const handleToggleFavorite = async (id: string, next: boolean) => {
+    // Optimistically flip the star so the click feels instant.
+    setPrompts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, is_favorite: next } : p))
+    );
+
+    const supabase = createClient();
+    // Same defensive shape as handleDelete: under RLS, an update that matches
+    // no policy affects 0 rows *without* raising an error, so checking the
+    // returned rows is the only way to know the update really happened.
+    const { data, error: updateError } = await supabase
+      .from('prompts')
+      .update({ is_favorite: next })
+      .eq('id', id)
+      .select('id');
+
+    if (updateError || !data || data.length === 0) {
+      // Revert the optimistic flip — the DB didn't actually change.
+      setPrompts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, is_favorite: !next } : p))
+      );
+      alert(
+        updateError
+          ? 'Could not update favorite: ' + updateError.message
+          : "Could not update this prompt's favorite status — you may not have permission (missing update policy)."
+      );
+    }
+  };
+
+  // Client-side search + format + favorites filter over the already-fetched rows.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return prompts.filter((p) => {
       const matchesFormat = formatFilter === 'all' || p.format === formatFilter;
+      const matchesFavorite = !favoritesOnly || p.is_favorite;
       const matchesQuery =
         !q ||
         p.core_idea?.toLowerCase().includes(q) ||
         p.generated_result?.toLowerCase().includes(q);
-      return matchesFormat && matchesQuery;
+      return matchesFormat && matchesFavorite && matchesQuery;
     });
-  }, [prompts, query, formatFilter]);
+  }, [prompts, query, formatFilter, favoritesOnly]);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -146,6 +177,20 @@ export default function HistoryPage() {
                 {f.label}
               </button>
             ))}
+            {/* Independent boolean filter — composes with the format chips above
+                rather than being one of their values. */}
+            <button
+              onClick={() => setFavoritesOnly((prev) => !prev)}
+              className={cn(
+                'flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors',
+                favoritesOnly
+                  ? 'border-accent/30 bg-accent/15 text-accent-ink'
+                  : 'border-line text-muted hover:border-line-strong hover:text-ink'
+              )}
+            >
+              <Star className={cn('h-3.5 w-3.5', favoritesOnly && 'fill-accent-ink')} />
+              Favorites
+            </button>
           </div>
         </div>
       )}
@@ -186,7 +231,12 @@ export default function HistoryPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((prompt) => (
-            <PromptCard key={prompt.id} prompt={prompt} onDelete={handleDelete} />
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+              onDelete={handleDelete}
+              onToggleFavorite={handleToggleFavorite}
+            />
           ))}
         </div>
       )}

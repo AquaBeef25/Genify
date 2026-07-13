@@ -175,3 +175,27 @@ drop policy if exists "Users can delete their own prompts" on public.prompts;
 create policy "Users can delete their own prompts"
   on public.prompts for delete
   using (auth.uid() = user_id);
+
+
+-- ----------------------------------------------------------------------------
+-- 6. prompts — favorites (is_favorite column + UPDATE policy)
+-- ----------------------------------------------------------------------------
+-- Lets a user star/unstar a prompt from My Prompts. Like the DELETE fix above,
+-- `prompts` had RLS enabled with only SELECT + INSERT policies, so there was
+-- no way for a user to mutate a row they own — an update() call would silently
+-- affect 0 rows under RLS default-deny. This adds the column plus a per-row
+-- UPDATE policy scoped to the same ownership check as the existing DELETE
+-- policy (auth.uid() = user_id). It's intentionally not column-restricted to
+-- is_favorite: the user already fully owns this row (they can delete it
+-- outright), so a same-owner update of any column isn't a meaningfully bigger
+-- risk, and Postgres RLS policies aren't naturally column-scoped without extra
+-- machinery (column privileges + a second role, or a trigger) that isn't
+-- justified here.
+alter table public.prompts
+  add column if not exists is_favorite boolean not null default false;
+
+drop policy if exists "Users can update their own prompts" on public.prompts;
+create policy "Users can update their own prompts"
+  on public.prompts for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
