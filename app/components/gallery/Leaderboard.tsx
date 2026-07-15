@@ -72,12 +72,12 @@ export default function Leaderboard({
                   href={c.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="truncate text-sm font-medium text-ink hover:text-accent-ink"
+                  className="block truncate text-sm font-medium text-ink hover:text-accent-ink"
                 >
                   {c.name}
                 </a>
               ) : (
-                <span className="truncate text-sm font-medium text-ink">
+                <span className="block truncate text-sm font-medium text-ink">
                   {c.name}
                 </span>
               )}
